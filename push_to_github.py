@@ -99,8 +99,8 @@ def main():
     subprocess.run(["git", "remote", "set-url", "origin", public_remote], check=True)
 
     print("=" * 60)
-    print(f"Sucesso! Projeto publicado no GitHub em:")
-    print(f"👉 https://github.com/luissaviobrun17-alt/alex-construcoes")
+    print("Sucesso! Projeto publicado no GitHub em:")
+    print(" -> https://github.com/luissaviobrun17-alt/alex-construcoes")
     print("=" * 60)
 
 if __name__ == "__main__":
