@@ -4,8 +4,8 @@
     "phone": "5511998877665",
     "address": "Av. Paulista, 1000 - Canteiro Central",
     "cpf": "123.456.789-00",
-    "startDate": "2026-09-20",
-    "notes": "Cliente validado no sistema Alex Construcoes"
+    "startDate": "2026-09-25",
+    "notes": "Reforma completa e instalações técnicas Alex Construções"
   },
   "budgetSettings": {
     "bdi": 15,
@@ -19,7 +19,7 @@
       "unit": "m²",
       "directCost": 45,
       "suggestedPrice": 68,
-      "quantity": 30,
+      "quantity": 31,
       "description": "Execução de alvenaria de vedação com blocos cerâmicos furados 9x19x19cm, assentados com argamassa mista de cimento, cal e areia traço 1:2:8, incluindo amarração, vergas e contravergas nas aberturas."
     },
     {
@@ -29,7 +29,7 @@
       "unit": "m²",
       "directCost": 28,
       "suggestedPrice": 45,
-      "quantity": 70,
+      "quantity": 57,
       "description": "Aplicação de emboço/reboco paulista com argamassa usinada ou preparada em obra traço 1:3, sarrafeado e desempenado com feltro para acabamento regular."
     },
     {
@@ -89,7 +89,7 @@
       "unit": "m²",
       "directCost": 100,
       "suggestedPrice": 150,
-      "quantity": 1,
+      "quantity": 1200,
       "description": "trocar a fiação completa da cozinha"
     }
   ],
@@ -127,5 +127,26 @@
     "signatureBase64": "",
     "clientSigned": false
   },
-  "lastModified": 1789418050845
+  "lastModified": 1789421917982,
+  "activeClientId": "CLI-1",
+  "clients": [
+    {
+      "id": "CLI-1",
+      "name": "Luis Savio Brun",
+      "phone": "5511998877665",
+      "address": "Av. Paulista, 1000 - Canteiro Central",
+      "cpf": "123.456.789-00",
+      "startDate": "2026-09-25",
+      "notes": "Reforma completa e instalações técnicas Alex Construções"
+    },
+    {
+      "id": "CLI-2",
+      "name": "João Carlos Ferreira",
+      "phone": "5511998877665",
+      "address": "Rua das Laranjeiras, 450 - Bairro Jardim América",
+      "cpf": "987.654.321-11",
+      "startDate": "2026-09-20",
+      "notes": "Reforma da área gourmet e fachada"
+    }
+  ]
 }

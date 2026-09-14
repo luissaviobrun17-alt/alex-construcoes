@@ -6,14 +6,35 @@
 // ESTADO GLOBAL DA APLICAÇÃO
 let appState = {
   lastModified: Date.now(),
+  activeClientId: "CLI-1",
   client: {
-    name: "João Carlos Ferreira",
+    name: "Luis Savio Brun",
     phone: "5511998877665",
-    address: "Rua das Laranjeiras, 450 - Bairro Jardim América",
+    address: "Av. Paulista, 1000 - Canteiro Central",
     cpf: "123.456.789-00",
-    startDate: "2026-09-20",
-    notes: "Reforma completa da área gourmet, banheiro social e fachada."
+    startDate: "2026-09-25",
+    notes: "Reforma completa e instalações técnicas Alex Construções"
   },
+  clients: [
+    {
+      id: "CLI-1",
+      name: "Luis Savio Brun",
+      phone: "5511998877665",
+      address: "Av. Paulista, 1000 - Canteiro Central",
+      cpf: "123.456.789-00",
+      startDate: "2026-09-25",
+      notes: "Reforma completa e instalações técnicas Alex Construções"
+    },
+    {
+      id: "CLI-2",
+      name: "João Carlos Ferreira",
+      phone: "5511998877665",
+      address: "Rua das Laranjeiras, 450 - Bairro Jardim América",
+      cpf: "987.654.321-11",
+      startDate: "2026-09-20",
+      notes: "Reforma da área gourmet e fachada"
+    }
+  ],
   budgetSettings: {
     bdi: 15,
     margin: 25
@@ -145,14 +166,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   if ('caches' in window) {
     caches.keys().then(keys => {
       keys.forEach(k => {
-        if (k !== 'alex-construcoes-v3') caches.delete(k);
+        if (k !== 'alex-construcoes-v4') caches.delete(k);
       });
     });
   }
 
-  // Registra Service Worker v3 com auto-update
+  // Registra Service Worker v4 com auto-update
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=20260914v3').then(reg => {
+    navigator.serviceWorker.register('sw.js?v=20260914v4').then(reg => {
       reg.update();
     }).catch(() => {});
   }
@@ -163,6 +184,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Popula formulários e telas
   populateClientForm();
+  renderClientsList();
   renderCatalogItems();
   populateQuickAreaSelect();
 
@@ -225,16 +247,17 @@ async function loadState() {
   // Prioriza os dados mais recentes comparando timestamps
   if (localData && (!serverData || !serverData.client || (localData.lastModified && localData.lastModified > (serverData.lastModified || 0)))) {
     appState = localData;
+    ensureClientsIntegrity();
     updateSyncStatus(false);
-    // Envia dados locais para atualizar o servidor se ele estiver online
     if (serverData) {
       saveAllData(false);
     }
     return;
   }
 
-  if (serverData && serverData.client) {
+  if (serverData && (serverData.client || serverData.clients)) {
     appState = serverData;
+    ensureClientsIntegrity();
     localStorage.setItem('alex_app_state', JSON.stringify(appState));
     updateSyncStatus(true);
     return;
@@ -242,7 +265,54 @@ async function loadState() {
 
   if (localData) {
     appState = localData;
+    ensureClientsIntegrity();
     updateSyncStatus(false);
+  } else {
+    ensureClientsIntegrity();
+  }
+}
+
+function ensureClientsIntegrity() {
+  if (!appState.clients || !Array.isArray(appState.clients) || appState.clients.length === 0) {
+    if (appState.client && appState.client.name) {
+      appState.clients = [{ id: "CLI-1", ...appState.client }];
+      appState.activeClientId = "CLI-1";
+    } else {
+      appState.clients = [
+        {
+          id: "CLI-1",
+          name: "Luis Savio Brun",
+          phone: "5511998877665",
+          address: "Av. Paulista, 1000 - Canteiro Central",
+          cpf: "123.456.789-00",
+          startDate: "2026-09-25",
+          notes: "Reforma completa e instalações técnicas Alex Construções"
+        },
+        {
+          id: "CLI-2",
+          name: "João Carlos Ferreira",
+          phone: "5511998877665",
+          address: "Rua das Laranjeiras, 450 - Bairro Jardim América",
+          cpf: "987.654.321-11",
+          startDate: "2026-09-20",
+          notes: "Reforma da área gourmet e fachada"
+        }
+      ];
+      appState.activeClientId = "CLI-1";
+      appState.client = appState.clients[0];
+    }
+  }
+
+  if (!appState.activeClientId && appState.clients.length > 0) {
+    appState.activeClientId = appState.clients[0].id;
+  }
+
+  const active = appState.clients.find(c => c.id === appState.activeClientId);
+  if (active) {
+    appState.client = active;
+  } else if (appState.clients.length > 0) {
+    appState.client = appState.clients[0];
+    appState.activeClientId = appState.clients[0].id;
   }
 }
 
@@ -333,12 +403,224 @@ function switchTab(tabId) {
 // ====================================================================
 function populateClientForm() {
   const c = appState.client || {};
-  document.getElementById('clientName').value = c.name || "";
-  document.getElementById('clientPhone').value = c.phone || "";
-  document.getElementById('clientAddress').value = c.address || "";
-  document.getElementById('clientCpf').value = c.cpf || "";
-  document.getElementById('clientStartDate').value = c.startDate || "";
-  document.getElementById('clientNotes').value = c.notes || "";
+  const nameInput = document.getElementById('clientName');
+  const phoneInput = document.getElementById('clientPhone');
+  const addrInput = document.getElementById('clientAddress');
+  const cpfInput = document.getElementById('clientCpf');
+  const startInput = document.getElementById('clientStartDate');
+  const notesInput = document.getElementById('clientNotes');
+  const headerName = document.getElementById('activeClientNameHeader');
+
+  if (nameInput) nameInput.value = c.name || "";
+  if (phoneInput) phoneInput.value = c.phone || "";
+  if (addrInput) addrInput.value = c.address || "";
+  if (cpfInput) cpfInput.value = c.cpf || "";
+  if (startInput) startInput.value = c.startDate || "";
+  if (notesInput) notesInput.value = c.notes || "";
+  if (headerName) headerName.innerText = c.name ? c.name : "Novo Cliente";
+}
+
+function renderClientsList() {
+  const container = document.getElementById('clientsListContainer');
+  if (!container) return;
+
+  if (!appState.clients || !Array.isArray(appState.clients) || appState.clients.length === 0) {
+    if (appState.client && appState.client.name) {
+      appState.clients = [{ id: "CLI-1", ...appState.client }];
+      appState.activeClientId = "CLI-1";
+    } else {
+      appState.clients = [{
+        id: "CLI-1",
+        name: "Luis Savio Brun",
+        phone: "5511998877665",
+        address: "Av. Paulista, 1000 - Canteiro Central",
+        cpf: "123.456.789-00",
+        startDate: "2026-09-25",
+        notes: "Reforma completa e instalações técnicas Alex Construções"
+      }];
+      appState.activeClientId = "CLI-1";
+      appState.client = appState.clients[0];
+    }
+  }
+
+  container.innerHTML = "";
+
+  appState.clients.forEach(c => {
+    const isActive = (c.id === appState.activeClientId);
+    const card = document.createElement('div');
+    card.className = `p-4 rounded-2xl border transition relative flex flex-col justify-between ${
+      isActive 
+        ? "bg-slate-950 border-2 border-emerald-500 shadow-xl shadow-emerald-950/40" 
+        : "bg-slate-950/80 border border-slate-800 hover:border-slate-700 shadow-md"
+    }`;
+
+    const cleanPhone = (c.phone || "").replace(/\D/g, '');
+
+    card.innerHTML = `
+      <div class="space-y-2">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm ${isActive ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-300'}">
+              ${c.name ? c.name.charAt(0).toUpperCase() : 'C'}
+            </div>
+            <div>
+              <h4 class="text-sm sm:text-base font-extrabold text-white leading-tight">${c.name || "Cliente Sem Nome"}</h4>
+              <span class="text-[11px] text-slate-400 font-mono">${c.cpf || "CPF não inf."}</span>
+            </div>
+          </div>
+          ${isActive 
+            ? `<span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-black rounded-lg uppercase tracking-wider shrink-0 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Ativa</span>`
+            : `<button onclick="deleteClient('${c.id}')" title="Excluir Cliente" class="text-slate-500 hover:text-red-400 p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`
+          }
+        </div>
+
+        <p class="text-xs text-slate-300 truncate" title="${c.address || ''}">
+          📍 ${c.address || "Endereço da obra não informado"}
+        </p>
+        <p class="text-xs text-slate-400">
+          📱 ${c.phone || "Sem telefone"} ${c.startDate ? `• Início: <strong>${c.startDate}</strong>` : ''}
+        </p>
+      </div>
+
+      <div class="pt-3 mt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+        ${isActive
+          ? `<span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5"><i data-lucide="check-circle" class="w-4 h-4"></i> Obra Selecionada</span>`
+          : `<button onclick="selectActiveClient('${c.id}')" class="touch-btn px-3 py-1.5 bg-brand-blue hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer shadow">
+               <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>
+               <span>Selecionar Esta Obra</span>
+             </button>`
+        }
+        ${cleanPhone ? `
+          <a href="https://api.whatsapp.com/send?phone=${cleanPhone}" target="_blank" class="p-2 bg-emerald-950 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 rounded-xl transition cursor-pointer" title="Conversar no WhatsApp">
+            <i data-lucide="message-circle" class="w-4 h-4"></i>
+          </a>
+        ` : ''}
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function openNewClientModal() {
+  const modal = document.getElementById('newClientModal');
+  if (!modal) return;
+
+  document.getElementById('modalClientName').value = "";
+  document.getElementById('modalClientPhone').value = "";
+  document.getElementById('modalClientAddress').value = "";
+  document.getElementById('modalClientCpf').value = "";
+  document.getElementById('modalClientStartDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('modalClientNotes').value = "";
+
+  modal.classList.remove('hidden');
+  setTimeout(() => {
+    const input = document.getElementById('modalClientName');
+    if (input) input.focus();
+  }, 100);
+}
+
+function closeNewClientModal() {
+  const modal = document.getElementById('newClientModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function submitNewClientModal() {
+  const name = document.getElementById('modalClientName').value.trim();
+  if (!name) {
+    alert("Por favor, preencha o Nome Completo do Cliente.");
+    document.getElementById('modalClientName').focus();
+    return;
+  }
+
+  const phone = document.getElementById('modalClientPhone').value.trim();
+  const address = document.getElementById('modalClientAddress').value.trim();
+  const cpf = document.getElementById('modalClientCpf').value.trim();
+  const startDate = document.getElementById('modalClientStartDate').value;
+  const notes = document.getElementById('modalClientNotes').value.trim();
+
+  const newId = "CLI-" + Date.now();
+  const newClient = {
+    id: newId,
+    name: name,
+    phone: phone.replace(/\D/g, ''),
+    address: address || "Endereço em levantamento",
+    cpf: cpf,
+    startDate: startDate,
+    notes: notes || "Nova obra cadastrada no Sistema Alex Construções"
+  };
+
+  if (!appState.clients || !Array.isArray(appState.clients)) {
+    appState.clients = [];
+  }
+
+  appState.clients.unshift(newClient);
+  appState.activeClientId = newId;
+  appState.client = newClient;
+
+  // Atualiza interface imediatamente
+  populateClientForm();
+  renderClientsList();
+  updateContractDocument();
+  updateMemorialContent();
+  updateReceiptPreview();
+  renderFinancials();
+
+  // Salva no banco e fecha modal
+  saveAllData(true);
+  closeNewClientModal();
+
+  showToast(`✅ Nova obra de "${name}" cadastrada e ativada com sucesso!`);
+}
+
+function selectActiveClient(clientId) {
+  const found = (appState.clients || []).find(c => c.id === clientId);
+  if (!found) return;
+
+  appState.activeClientId = clientId;
+  appState.client = found;
+
+  populateClientForm();
+  renderClientsList();
+  updateContractDocument();
+  updateMemorialContent();
+  updateReceiptPreview();
+  renderFinancials();
+
+  saveAllData(false);
+  showToast(`Obra de "${found.name}" selecionada como ativa!`);
+}
+
+function deleteClient(clientId) {
+  if (!appState.clients || appState.clients.length <= 1) {
+    alert("Não é possível excluir o único cliente cadastrado. Cadastre outro cliente primeiro.");
+    return;
+  }
+
+  const clientToDelete = appState.clients.find(c => c.id === clientId);
+  const clientName = clientToDelete ? clientToDelete.name : "este cliente";
+
+  if (!confirm(`Tem certeza que deseja excluir o cadastro de "${clientName}"?`)) {
+    return;
+  }
+
+  appState.clients = appState.clients.filter(c => c.id !== clientId);
+
+  if (appState.activeClientId === clientId) {
+    appState.activeClientId = appState.clients[0].id;
+    appState.client = appState.clients[0];
+    populateClientForm();
+    updateContractDocument();
+    updateMemorialContent();
+    updateReceiptPreview();
+    renderFinancials();
+  }
+
+  renderClientsList();
+  saveAllData(true);
+  showToast(`Cliente "${clientName}" removido.`);
 }
 
 function clearClientForm() {
@@ -348,8 +630,10 @@ function clearClientForm() {
   document.getElementById('clientCpf').value = "";
   document.getElementById('clientStartDate').value = "";
   document.getElementById('clientNotes').value = "";
+  const headerName = document.getElementById('activeClientNameHeader');
+  if (headerName) headerName.innerText = "Novo Cliente em Preenchimento";
   document.getElementById('clientName').focus();
-  showToast("Formulário limpo! Digite os dados do novo cliente.");
+  showToast("Campos limpos! Digite os dados e clique em 'Salvar Alterações'.");
 }
 
 function saveClientData() {
@@ -360,7 +644,8 @@ function saveClientData() {
     return;
   }
 
-  appState.client = {
+  const updatedClient = {
+    id: appState.activeClientId || ("CLI-" + Date.now()),
     name: name,
     phone: document.getElementById('clientPhone').value.replace(/\D/g, ''),
     address: document.getElementById('clientAddress').value.trim(),
@@ -369,14 +654,29 @@ function saveClientData() {
     notes: document.getElementById('clientNotes').value.trim()
   };
 
-  // Atualiza imediatamente todos os outros módulos com os novos dados
+  appState.client = updatedClient;
+  appState.activeClientId = updatedClient.id;
+
+  if (!appState.clients || !Array.isArray(appState.clients)) {
+    appState.clients = [updatedClient];
+  } else {
+    const idx = appState.clients.findIndex(c => c.id === updatedClient.id);
+    if (idx >= 0) {
+      appState.clients[idx] = updatedClient;
+    } else {
+      appState.clients.unshift(updatedClient);
+    }
+  }
+
+  populateClientForm();
+  renderClientsList();
   updateContractDocument();
   updateMemorialContent();
   updateReceiptPreview();
   renderFinancials();
 
   saveAllData(true);
-  showToast(`✅ Cliente "${name}" cadastrado e sincronizado com sucesso!`);
+  showToast(`✅ Dados de "${name}" salvos e sincronizados com sucesso!`);
 }
 
 function sendWhatsAppTemplate(type) {
@@ -446,6 +746,78 @@ function applyQuickAreaToSelectedService() {
   } else {
     alert("Selecione um serviço válido na lista.");
   }
+}
+
+function applyQuickPresetProjection() {
+  const pkgSelect = document.getElementById('presetPackageSelect');
+  const areaInput = document.getElementById('presetAreaInput');
+  const pkg = pkgSelect ? pkgSelect.value : "reforma_completa";
+  const area = parseFloat(areaInput ? areaInput.value : 50) || 50;
+
+  if (area <= 0) {
+    alert("Por favor, insira uma metragem válida maior que zero.");
+    return;
+  }
+
+  // Zera quantidades antes de aplicar projeção
+  appState.catalog.forEach(item => {
+    item.quantity = 0;
+  });
+
+  if (pkg === "reforma_completa") {
+    // Proporções politécnicas Alex Construções para reforma completa:
+    const civ03 = appState.catalog.find(i => i.code === 'CIV-03');
+    if (civ03) civ03.quantity = parseFloat(area.toFixed(2));
+
+    const civ01 = appState.catalog.find(i => i.code === 'CIV-01');
+    if (civ01) civ01.quantity = parseFloat((area * 0.35).toFixed(2));
+
+    const civ02 = appState.catalog.find(i => i.code === 'CIV-02');
+    if (civ02) civ02.quantity = parseFloat((area * 2.2).toFixed(2));
+
+    const pin01 = appState.catalog.find(i => i.code === 'PIN-01');
+    if (pin01) pin01.quantity = parseFloat((area * 2.5).toFixed(2));
+
+    const ele01 = appState.catalog.find(i => i.code === 'ELE-01');
+    if (ele01) ele01.quantity = Math.max(4, Math.ceil(area / 6));
+
+    const ele02 = appState.catalog.find(i => i.code === 'ELE-02');
+    if (ele02) ele02.quantity = 1;
+
+    const hid01 = appState.catalog.find(i => i.code === 'HID-01');
+    if (hid01) hid01.quantity = Math.max(2, Math.ceil(area / 15));
+
+  } else if (pkg === "fechamento_reboco") {
+    const civ01 = appState.catalog.find(i => i.code === 'CIV-01');
+    if (civ01) civ01.quantity = parseFloat(area.toFixed(2));
+
+    const civ02 = appState.catalog.find(i => i.code === 'CIV-02');
+    if (civ02) civ02.quantity = parseFloat((area * 2.0).toFixed(2));
+
+  } else if (pkg === "pisos_porcelanato") {
+    const civ03 = appState.catalog.find(i => i.code === 'CIV-03');
+    if (civ03) civ03.quantity = parseFloat(area.toFixed(2));
+
+  } else if (pkg === "pintura_fina") {
+    const pin01 = appState.catalog.find(i => i.code === 'PIN-01');
+    if (pin01) pin01.quantity = parseFloat((area * 2.5).toFixed(2));
+
+  } else if (pkg === "eletrica_hidraulica") {
+    const ele01 = appState.catalog.find(i => i.code === 'ELE-01');
+    if (ele01) ele01.quantity = Math.max(6, Math.ceil(area / 4));
+
+    const ele02 = appState.catalog.find(i => i.code === 'ELE-02');
+    if (ele02) ele02.quantity = 1;
+
+    const hid01 = appState.catalog.find(i => i.code === 'HID-01');
+    if (hid01) hid01.quantity = Math.max(2, Math.ceil(area / 10));
+  }
+
+  renderCatalogItems();
+  recalculateBudget();
+  saveAllData(true);
+
+  showToast(`⚡ Projeção de obra calculada para ${area} m² com sucesso!`);
 }
 
 function renderCatalogItems() {
@@ -876,6 +1248,34 @@ function reset3dCamera() {
     controls.target.set(0, 1.5, 0);
     controls.update();
   }
+}
+
+function set3dCameraProjection(view) {
+  if (!camera || !controls || !renderer) {
+    checkAndResizeThreeJs();
+  }
+  if (!camera || !controls) return;
+
+  if (view === 'top') {
+    camera.position.set(0, 20, 0.01);
+    controls.target.set(0, 0, 0);
+    showToast("📐 Projeção: Planta Baixa (Superior)");
+  } else if (view === 'front') {
+    camera.position.set(0, 2.2, 16);
+    controls.target.set(0, 1.8, 0);
+    showToast("🏛️ Projeção: Fachada Frontal");
+  } else if (view === 'side') {
+    camera.position.set(16, 2.2, 0);
+    controls.target.set(0, 1.8, 0);
+    showToast("📐 Projeção: Fachada Lateral");
+  } else {
+    camera.position.set(12, 10, 14);
+    controls.target.set(0, 1.5, 0);
+    showToast("🌐 Projeção: Isométrica 3D");
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
 }
 
 function switchVisualizerMode(mode) {

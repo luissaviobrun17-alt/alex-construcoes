@@ -247,18 +247,50 @@
     <!-- ABA 1: CLIENTE & WHATSAPP                                        -->
     <!-- ================================================================ -->
     <section id="tab-cliente" class="tab-pane space-y-6">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl">
-        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+
+      <!-- GERENCIADOR DE OBRAS & CLIENTES CADASTRADOS -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div class="flex items-center space-x-3">
-            <div class="p-3 bg-brand-blue/30 rounded-xl text-brand-orange border border-brand-blue">
+            <button type="button" onclick="openNewClientModal()" title="Cadastrar Novo Cliente" class="p-3 bg-brand-orange hover:bg-orange-600 text-white rounded-xl shadow-lg border border-orange-400 cursor-pointer flex items-center justify-center transition-transform hover:scale-105 active:scale-95">
               <i data-lucide="user-plus" class="w-7 h-7"></i>
-            </div>
+            </button>
             <div>
-              <h2 class="text-xl sm:text-2xl font-black text-white">CADASTRO RÁPIDO DO CLIENTE</h2>
-              <p class="text-xs sm:text-sm text-slate-400">Informações sincronizadas imediatamente entre campo e escritório.</p>
+              <h2 class="text-xl sm:text-2xl font-black text-white">OBRAS &amp; CLIENTES CADASTRADOS</h2>
+              <p class="text-xs sm:text-sm text-slate-400">Selecione a obra ativa ou adicione um novo cliente para iniciar o orçamento.</p>
             </div>
           </div>
-          <span class="px-3 py-1 bg-brand-orange/20 text-brand-orange text-xs font-black rounded-lg border border-brand-orange/40 uppercase">Campo Operacional</span>
+          <button type="button" onclick="openNewClientModal()" class="touch-btn px-5 py-3.5 bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black text-sm rounded-xl shadow-xl flex items-center justify-center space-x-2 border-2 border-orange-400 hover:scale-[1.02] transition-transform cursor-pointer">
+            <i data-lucide="user-plus" class="w-5 h-5"></i>
+            <span>+ CADASTRAR NOVO CLIENTE / OBRA</span>
+          </button>
+        </div>
+
+        <!-- LISTA / GRID DE CLIENTES E OBRAS -->
+        <div id="clientsListContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-2">
+          <!-- Preenchido dinamicamente via app.js -->
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO DE EDIÇÃO DA OBRA SELECIONADA -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
+          <div class="flex items-center space-x-3">
+            <div class="p-3 bg-brand-blue/30 rounded-xl text-brand-orange border border-brand-blue">
+              <i data-lucide="user-check" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="text-lg sm:text-xl font-black text-white">DADOS DA OBRA ATIVA NO SISTEMA</h3>
+              <p class="text-xs sm:text-sm text-slate-400">Editando informações de: <strong id="activeClientNameHeader" class="text-brand-orange font-bold">Carregando...</strong></p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="openNewClientModal()" class="touch-btn px-4 py-2 bg-brand-orange/20 hover:bg-brand-orange text-brand-orange hover:text-white border border-brand-orange/40 text-xs sm:text-sm font-bold rounded-xl flex items-center space-x-1.5 cursor-pointer transition">
+              <i data-lucide="user-plus" class="w-4 h-4"></i>
+              <span>+ Novo Cliente</span>
+            </button>
+            <span class="px-3 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-black rounded-lg uppercase">Obra em Edição</span>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -297,13 +329,17 @@
         </div>
 
         <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
-          <button type="button" onclick="clearClientForm()" class="touch-btn px-5 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 flex items-center justify-center space-x-2">
-            <i data-lucide="user-x" class="w-5 h-5 text-amber-400"></i>
-            <span>Novo Cadastro (Limpar)</span>
+          <button type="button" onclick="openNewClientModal()" class="touch-btn px-5 py-3.5 bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 text-white font-bold rounded-xl shadow flex items-center justify-center space-x-2 cursor-pointer">
+            <i data-lucide="user-plus" class="w-5 h-5"></i>
+            <span>+ Cadastrar Outro Cliente</span>
           </button>
-          <button type="button" onclick="saveClientData()" class="touch-btn px-6 py-3.5 bg-brand-blue hover:bg-blue-800 text-white font-bold rounded-xl shadow-lg flex items-center justify-center space-x-2">
+          <button type="button" onclick="clearClientForm()" class="touch-btn px-5 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 flex items-center justify-center space-x-2 cursor-pointer">
+            <i data-lucide="eraser" class="w-5 h-5 text-amber-400"></i>
+            <span>Limpar Campos</span>
+          </button>
+          <button type="button" onclick="saveClientData()" class="touch-btn px-6 py-3.5 bg-brand-blue hover:bg-blue-800 text-white font-bold rounded-xl shadow-lg flex items-center justify-center space-x-2 cursor-pointer">
             <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
-            <span>Salvar Informações do Cliente</span>
+            <span>Salvar Alterações do Cliente</span>
           </button>
         </div>
       </div>
@@ -411,6 +447,55 @@
             <button type="button" onclick="applyQuickAreaToSelectedService()" class="touch-btn w-full bg-brand-orange hover:bg-orange-700 text-white font-bold text-sm shadow-md">
               <i data-lucide="check" class="w-5 h-5 mr-1"></i>
               <span>Aplicar Área</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTRAL DE PROJEÇÕES PARAMÉTRICAS DE OBRAS (ENGENHARIA POLITÉCNICA) -->
+      <div class="bg-slate-900 border-2 border-brand-orange/40 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div class="flex items-center space-x-3">
+            <div class="p-2.5 bg-gradient-to-br from-brand-orange to-amber-600 rounded-xl text-white shadow-md">
+              <i data-lucide="sparkles" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                <span>SIMULADOR DE PROJEÇÃO PARAMÉTRICA DE OBRAS</span>
+                <span class="px-2 py-0.5 rounded text-[10px] bg-brand-orange text-white font-black uppercase">1 Clique</span>
+              </h3>
+              <p class="text-xs sm:text-sm text-slate-400">Projete instantaneamente todos os insumos, serviços e mão de obra calculados por metragem.</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+            Cálculo com BDI 15% &amp; Margem Ativa
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 items-end">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Pacote de Projeção Construtiva:</label>
+            <select id="presetPackageSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold text-sm outline-none focus:border-brand-orange">
+              <option value="reforma_completa">🏠 Reforma Geral Completa (Piso, Reboco, Alvenaria, Pintura, Elétrica e Hidráulica)</option>
+              <option value="fechamento_reboco">🧱 Estrutura &amp; Fechamento (Alvenaria + Reboco sarrafeado)</option>
+              <option value="pisos_porcelanato">✨ Pisos &amp; Revestimentos (Porcelanato retificado + Rodapé)</option>
+              <option value="pintura_fina">🎨 Pintura &amp; Acabamento Fino (Massa corrida 2 demãos + Pintura acrílica)</option>
+              <option value="eletrica_hidraulica">⚡ Instalações Completas (Pontos de Luz/Tomada + QDC + Água/Esgoto)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Metragem da Obra (m²):</label>
+            <div class="relative">
+              <input type="number" id="presetAreaInput" step="1" min="1" value="50" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold text-base outline-none focus:border-brand-orange" placeholder="Ex: 50">
+              <span class="absolute right-4 top-3 text-xs font-bold text-slate-500">m²</span>
+            </div>
+          </div>
+
+          <div>
+            <button type="button" onclick="applyQuickPresetProjection()" class="touch-btn w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm rounded-xl shadow-lg flex items-center justify-center space-x-2 border border-emerald-400/40 cursor-pointer">
+              <i data-lucide="zap" class="w-5 h-5"></i>
+              <span>GERAR PROJEÇÃO</span>
             </button>
           </div>
         </div>
@@ -561,17 +646,34 @@
             </h3>
             <p class="text-xs text-slate-400">Gire, aproxime (zoom) e explore os elementos da obra em tempo real.</p>
           </div>
-          <!-- Controles de Visibilidade 3D -->
-          <div class="flex flex-wrap gap-2">
-            <button onclick="toggle3dElement('roof')" id="toggle-roof-btn" class="touch-btn px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
-              Ocultar/Ver Laje
-            </button>
-            <button onclick="toggle3dElement('doors')" id="toggle-doors-btn" class="touch-btn px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
-              Aberturas / Vãos
-            </button>
-            <button onclick="reset3dCamera()" class="touch-btn px-3 py-1.5 text-xs bg-brand-orange hover:bg-orange-600 text-white">
-              Resetar Câmera
-            </button>
+          <!-- Controles de Visibilidade e Projeções Técnicas 3D -->
+          <div class="flex flex-wrap gap-2 items-center">
+            <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <button type="button" onclick="set3dCameraProjection('top')" class="touch-btn px-2.5 py-1.5 text-xs bg-slate-800 text-cyan-300 hover:bg-slate-700 rounded-lg font-bold cursor-pointer" title="Vista de Planta Baixa Superior">
+                📐 Planta Baixa
+              </button>
+              <button type="button" onclick="set3dCameraProjection('front')" class="touch-btn px-2.5 py-1.5 text-xs bg-slate-800 text-amber-300 hover:bg-slate-700 rounded-lg font-bold cursor-pointer" title="Vista Frontal da Fachada">
+                🏛️ Fachada Frontal
+              </button>
+              <button type="button" onclick="set3dCameraProjection('side')" class="touch-btn px-2.5 py-1.5 text-xs bg-slate-800 text-emerald-300 hover:bg-slate-700 rounded-lg font-bold cursor-pointer" title="Vista Lateral da Obra">
+                📐 Fachada Lateral
+              </button>
+              <button type="button" onclick="set3dCameraProjection('iso')" class="touch-btn px-2.5 py-1.5 text-xs bg-brand-blue text-white hover:bg-blue-700 rounded-lg font-bold cursor-pointer" title="Perspectiva Isométrica 3D">
+                🌐 Isométrica 3D
+              </button>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <button onclick="toggle3dElement('roof')" id="toggle-roof-btn" class="touch-btn px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg cursor-pointer">
+                Ocultar Laje
+              </button>
+              <button onclick="toggle3dElement('doors')" id="toggle-doors-btn" class="touch-btn px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg cursor-pointer">
+                Aberturas
+              </button>
+              <button onclick="reset3dCamera()" class="touch-btn px-3 py-1.5 text-xs bg-brand-orange hover:bg-orange-600 text-white rounded-lg cursor-pointer font-bold">
+                Resetar Câmera
+              </button>
+            </div>
           </div>
         </div>
 
@@ -975,6 +1077,88 @@
   </main>
 
   <!-- ================================================================ -->
+  <!-- MODAL: CADASTRAR NOVO CLIENTE / NOVA OBRA                        -->
+  <!-- ================================================================ -->
+  <div id="newClientModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border-2 border-brand-orange rounded-3xl max-w-xl w-full p-5 sm:p-7 space-y-5 shadow-2xl relative max-h-[95vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center space-x-3">
+          <div class="p-3 bg-brand-orange text-white rounded-xl shadow-md">
+            <i data-lucide="user-plus" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h3 class="text-xl sm:text-2xl font-black text-white">CADASTRAR NOVO CLIENTE / OBRA</h3>
+            <p class="text-xs sm:text-sm text-slate-400">Preencha os campos abaixo para iniciar um novo projeto.</p>
+          </div>
+        </div>
+        <button onclick="closeNewClientModal()" type="button" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition cursor-pointer">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <!-- CAMPOS EM BRANCO PRONTOS PARA DIGITAÇÃO -->
+      <form id="newClientForm" onsubmit="event.preventDefault(); submitNewClientModal();" class="space-y-4 text-left">
+        <div>
+          <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+            Nome Completo do Cliente <span class="text-brand-orange">*</span>
+          </label>
+          <input type="text" id="modalClientName" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium focus:border-brand-orange focus:ring-1 focus:ring-brand-orange outline-none" placeholder="Ex: Carlos Eduardo Silveira">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+              Celular / WhatsApp (com DDD) <span class="text-brand-orange">*</span>
+            </label>
+            <div class="relative">
+              <input type="tel" id="modalClientPhone" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 pl-11 text-white font-medium focus:border-brand-orange outline-none" placeholder="5511998877665">
+              <i data-lucide="phone" class="w-4 h-4 text-emerald-400 absolute left-3.5 top-3.5"></i>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+              CPF ou CNPJ
+            </label>
+            <input type="text" id="modalClientCpf" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium focus:border-brand-orange outline-none" placeholder="000.000.000-00">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+            Endereço Completo da Obra <span class="text-brand-orange">*</span>
+          </label>
+          <input type="text" id="modalClientAddress" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium focus:border-brand-orange outline-none" placeholder="Rua / Bairro / Cidade - CEP">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+              Data Prevista de Início
+            </label>
+            <input type="date" id="modalClientStartDate" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium focus:border-brand-orange outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+              Tipo / Escopo Geral da Obra
+            </label>
+            <input type="text" id="modalClientNotes" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium focus:border-brand-orange outline-none" placeholder="Ex: Construção de casa 120m² / Reforma gourmet">
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2.5 justify-end pt-4 border-t border-slate-800">
+          <button type="button" onclick="closeNewClientModal()" class="touch-btn px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm cursor-pointer">
+            Cancelar
+          </button>
+          <button type="submit" class="touch-btn px-6 py-3 bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black rounded-xl shadow-lg text-sm flex items-center justify-center space-x-2 cursor-pointer border border-orange-400">
+            <i data-lucide="check-circle" class="w-5 h-5 text-white"></i>
+            <span>SALVAR CLIENTE &amp; ATIVAR OBRA</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
   <!-- MODAL: CONECTAR CELULAR VIA QR CODE & LINK DE REDE               -->
   <!-- ================================================================ -->
   <div id="qrModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1084,7 +1268,7 @@
     <span id="toastMessage" class="text-sm font-bold">Dados salvos com sucesso!</span>
   </div>
 
-  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (VERSÃO ATUALIZADA V3) -->
-  <script src="app.js?v=20260914v3"></script>
+  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (VERSÃO ATUALIZADA V4) -->
+  <script src="app.js?v=20260914v4"></script>
 </body>
 </html>
