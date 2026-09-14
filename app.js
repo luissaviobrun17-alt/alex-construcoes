@@ -140,9 +140,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     lucide.createIcons();
   }
 
-  // Registra Service Worker para PWA Offline
+  // Limpa caches antigos e registra Service Worker com auto-update
+  if ('caches' in window) {
+    caches.keys().then(keys => {
+      keys.forEach(k => {
+        if (k !== 'alex-construcoes-v3') caches.delete(k);
+      });
+    });
+  }
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260914v3').then(reg => {
+      reg.update();
+    }).catch(() => {});
   }
 
   // Tenta carregar dados do servidor ou localStorage

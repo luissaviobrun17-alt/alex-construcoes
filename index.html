@@ -9,6 +9,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -96,10 +99,84 @@
   <!-- TOPO / CABEÇALHO COM LOGO OFICIAL SVG E STATUS NUVEM LOCAL -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 shadow-lg no-print">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between">
-      <!-- LOGO -->
-      <div class="flex items-center space-x-2 sm:space-x-3 cursor-pointer shrink-0" onclick="switchTab('cliente')">
-        <div class="h-12 sm:h-14 flex items-center">
-          <img src="logo.svg" alt="Alex Construções" class="h-full w-auto max-w-[280px] sm:max-w-[380px] md:max-w-[440px] object-contain">
+      <!-- LOGO OFICIAL INLINE (LIVRE DE CACHE DO NAVEGADOR) -->
+      <div class="flex items-center space-x-2 sm:space-x-3 cursor-pointer shrink-0" onclick="switchTab('cliente')" title="Alex Construções - Início">
+        <div class="h-11 sm:h-14 flex items-center w-[270px] sm:w-[380px] md:w-[440px]">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 100" class="w-full h-auto">
+            <defs>
+              <linearGradient id="beamSteel" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#475569" />
+                <stop offset="50%" stop-color="#1E293B" />
+                <stop offset="100%" stop-color="#0F172A" />
+              </linearGradient>
+              <linearGradient id="orangeY" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stop-color="#C2410C" />
+                <stop offset="40%" stop-color="#EA580C" />
+                <stop offset="100%" stop-color="#FB923C" />
+              </linearGradient>
+              <linearGradient id="beamBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#38BDF8" />
+                <stop offset="50%" stop-color="#2563EB" />
+                <stop offset="100%" stop-color="#1E3A8A" />
+              </linearGradient>
+              <filter id="shadowA" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.6"/>
+              </filter>
+            </defs>
+
+            <!-- SÍMBOLO ESTRUTURAL (PÓRTICO 'A' + 2 PILARES 'Y' DE SUSTENTAÇÃO) -->
+            <g transform="translate(10, 5)" filter="url(#shadowA)">
+              <!-- Base de Concreto -->
+              <rect x="4" y="82" width="88" height="6" rx="2" fill="#64748B" />
+              <rect x="0" y="86" width="96" height="4" rx="1.5" fill="#94A3B8" />
+
+              <!-- Treliça Superior do 'A' -->
+              <line x1="48" y1="16" x2="32" y2="44" stroke="#64748B" stroke-width="1.8" stroke-linecap="round" />
+              <line x1="48" y1="16" x2="64" y2="44" stroke="#64748B" stroke-width="1.8" stroke-linecap="round" />
+
+              <!-- Pernas do Pórtico Principal 'A' (Aço Escuro) -->
+              <polygon points="48,8 38,8 6,82 18,82" fill="url(#beamSteel)" stroke="#94A3B8" stroke-width="1.2" />
+              <polygon points="48,8 58,8 90,82 78,82" fill="url(#beamSteel)" stroke="#94A3B8" stroke-width="1.2" />
+
+              <!-- Topo do Pórtico -->
+              <polygon points="48,2 59,8 48,14 37,8" fill="url(#orangeY)" stroke="#FDBA74" stroke-width="0.8" />
+
+              <!-- Viga Mestra Transversal do 'A' (Azul Aço) -->
+              <rect x="17" y="44" width="62" height="7.5" rx="1.5" fill="url(#beamBlue)" stroke="#93C5FD" stroke-width="1" />
+              <circle cx="21" cy="47.75" r="1.2" fill="#FFFFFF" opacity="0.9" />
+              <circle cx="75" cy="47.75" r="1.2" fill="#FFFFFF" opacity="0.9" />
+
+              <!-- PILAR 'Y' ESQUERDO (Perfil em Y com Fuste Vertical Alto e Braços de Escora) -->
+              <g id="pilar-y-esq">
+                <rect x="26" y="80" width="14" height="2.5" rx="0.5" fill="#1E293B" stroke="#94A3B8" stroke-width="0.5" />
+                <rect x="30.5" y="63" width="5" height="17" rx="0.8" fill="url(#orangeY)" stroke="#FDBA74" stroke-width="0.7" />
+                <circle cx="33" cy="63" r="3" fill="#1E293B" stroke="#EA580C" stroke-width="1.8" />
+                <polygon points="31,63 35,63 26,51.5 22,51.5" fill="url(#orangeY)" stroke="#FDBA74" stroke-width="0.7" />
+                <polygon points="31,63 35,63 44,51.5 40,51.5" fill="url(#orangeY)" stroke="#FDBA74" stroke-width="0.7" />
+                <rect x="21" y="51.5" width="6" height="1.8" rx="0.4" fill="#FED7AA" />
+                <rect x="39" y="51.5" width="6" height="1.8" rx="0.4" fill="#FED7AA" />
+              </g>
+
+              <!-- PILAR 'Y' DIREITO (Simétrico ao Esquerdo) -->
+              <g id="pilar-y-dir">
+                <rect x="56" y="80" width="14" height="2.5" rx="0.5" fill="#1E293B" stroke="#94A3B8" stroke-width="0.5" />
+                <rect x="60.5" y="63" width="5" height="17" rx="0.8" fill="url(#orangeY)" stroke="#FDBA74" stroke-width="0.7" />
+                <circle cx="63" cy="63" r="3" fill="#1E293B" stroke="#EA580C" stroke-width="1.8" />
+                <polygon points="61,63 65,63 56,51.5 52,51.5" fill="url(#orangeY)" stroke="#FDBA74" stroke-width="0.7" />
+                <polygon points="61,63 65,63 74,51.5 70,51.5" fill="url(#orangeY)" stroke="#FDBA74" stroke-width="0.7" />
+                <rect x="51" y="51.5" width="6" height="1.8" rx="0.4" fill="#FED7AA" />
+                <rect x="69" y="51.5" width="6" height="1.8" rx="0.4" fill="#FED7AA" />
+              </g>
+            </g>
+
+            <!-- TIPOGRAFIA: ALEX CONSTRUÇÕES TOTALMENTE NÍTIDO E SEM CORTES -->
+            <g transform="translate(118, 6)">
+              <text x="0" y="42" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="42" fill="#FFFFFF" letter-spacing="2">ALEX</text>
+              <text x="124" y="42" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="42" fill="#EA580C" letter-spacing="1.5">CONSTRUÇÕES</text>
+              <text x="2" y="66" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="12" fill="#38BDF8" letter-spacing="3.2">SISTEMA OPERACIONAL DE ENGENHARIA &amp; OBRAS</text>
+              <line x1="2" y1="75" x2="480" y2="75" stroke="#EA580C" stroke-width="3" stroke-linecap="round" />
+            </g>
+          </svg>
         </div>
       </div>
 
@@ -997,7 +1074,7 @@
     <span id="toastMessage" class="text-sm font-bold">Dados salvos com sucesso!</span>
   </div>
 
-  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO -->
-  <script src="app.js"></script>
+  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (VERSÃO ATUALIZADA V3) -->
+  <script src="app.js?v=20260914v3"></script>
 </body>
 </html>
