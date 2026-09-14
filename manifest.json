@@ -1,0 +1,18 @@
+{
+  "name": "Alex Construções - Sistema Operacional",
+  "short_name": "Alex Obras",
+  "description": "Sistema Operacional Mobile-First para Engenharia, Orçamentos, Medição e Gestão de Obras.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#1E3A8A",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "client": {
+    "name": "João Carlos Ferreira",
+    "phone": "5511998877665",
+    "address": "Rua das Laranjeiras, 450 - Bairro Jardim América",
+    "cpf": "123.456.789-00",
+    "startDate": "2026-09-20",
+    "notes": "Teste de sincronizacao concluido com sucesso"
+  },
+  "budgetSettings": {
+    "bdi": 15,
+    "margin": 25
+  },
+  "catalog": [
+    {
+      "code": "CIV-01",
+      "discipline": "Civil",
+      "name": "Alvenaria de vedação c/ bloco cerâmico assentado",
+      "unit": "m²",
+      "directCost": 45,
+      "suggestedPrice": 68,
+      "quantity": 30,
+      "description": "Execução de alvenaria de vedação com blocos cerâmicos furados 9x19x19cm, assentados com argamassa mista de cimento, cal e areia traço 1:2:8, incluindo amarração, vergas e contravergas nas aberturas."
+    },
+    {
+      "code": "CIV-02",
+      "discipline": "Civil",
+      "name": "Reboco paulista / emboço sarrafeado",
+      "unit": "m²",
+      "directCost": 28,
+      "suggestedPrice": 45,
+      "quantity": 70,
+      "description": "Aplicação de emboço/reboco paulista com argamassa usinada ou preparada em obra traço 1:3, sarrafeado e desempenado com feltro para acabamento regular."
+    },
+    {
+      "code": "CIV-03",
+      "discipline": "Civil",
+      "name": "Assentamento de porcelanato retificado até 80x80",
+      "unit": "m²",
+      "directCost": 55,
+      "suggestedPrice": 90,
+      "quantity": 42,
+      "description": "Assentamento de revestimento porcelanato retificado com dupla colagem em argamassa AC-III flexível, niveladores de piso tipo cunha e rejuntamento fino resinado."
+    },
+    {
+      "code": "ELE-01",
+      "discipline": "Elétrica",
+      "name": "Ponto de força / tomada / iluminação embutida",
+      "unit": "un",
+      "directCost": 40,
+      "suggestedPrice": 75,
+      "quantity": 18,
+      "description": "Instalação de ponto elétrico embutido em alvenaria com eletroduto corrugado reforçado, fiação antichama de cobre 2,5mm², caixa 4x2 e acabamento com módulo/espelho."
+    },
+    {
+      "code": "ELE-02",
+      "discipline": "Elétrica",
+      "name": "Montagem de Quadro de Distribuição (QDC) completo",
+      "unit": "un",
+      "directCost": 280,
+      "suggestedPrice": 500,
+      "quantity": 1,
+      "description": "Fornecimento e montagem técnica de quadro de distribuição de embutir até 16 disjuntores, com Disjuntor Geral Bipolar, DPS classe II, DR tetrapolar/bipolar de alta sensibilidade 30mA e barramentos tipo pente."
+    },
+    {
+      "code": "HID-01",
+      "discipline": "Hidráulica",
+      "name": "Ponto de água fria/esgoto sanitário (PPR/PVC)",
+      "unit": "un",
+      "directCost": 95,
+      "suggestedPrice": 165,
+      "quantity": 6,
+      "description": "Instalação de ponto hidráulico de alimentação predial em tubulação termofusão PPR ou PVC roscável/soldável com conexões, e derivação para esgoto com fecho hídrico sifonado de PVC ponta e bolsa."
+    },
+    {
+      "code": "PIN-01",
+      "discipline": "Pintura",
+      "name": "Emassamento (2 demãos) e pintura acrílica fosca",
+      "unit": "m²",
+      "directCost": 22,
+      "suggestedPrice": 38,
+      "quantity": 110,
+      "description": "Preparo de superfícies com fundo preparador, lixamento fino, aplicação de duas demãos de massa corrida/acrílica e pintura final com 2 a 3 demãos de tinta acrílica premium acabamento fosco lavável."
+    }
+  ],
+  "financials": {
+    "receipts": [
+      {
+        "id": "REC-001",
+        "date": "2026-09-20",
+        "clientName": "João Carlos Ferreira",
+        "stage": "Sinal e Início da Obra (30%)",
+        "amount": 4500,
+        "method": "PIX",
+        "remainingBalance": 10500
+      }
+    ],
+    "expenses": [
+      {
+        "id": "EXP-001",
+        "date": "2026-09-21",
+        "description": "Diária Pedreiro e Ajudante (Abertura de vãos)",
+        "category": "Mão de Obra",
+        "amount": 420
+      },
+      {
+        "id": "EXP-002",
+        "date": "2026-09-21",
+        "description": "Argamassa AC-III e espaçadores niveladores",
+        "category": "Material Rápido",
+        "amount": 265
+      }
+    ]
+  },
+  "contract": {
+    "signedAt": "",
+    "signatureBase64": "",
+    "clientSigned": false
+  }
+}
