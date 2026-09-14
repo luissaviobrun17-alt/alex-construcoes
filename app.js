@@ -1,10 +1,11 @@
 /**
  * SISTEMA OPERACIONAL ALEX CONSTRUÇÕES - NÚCLEO DE OPERAÇÕES EM CAMPO E ESCRITÓRIO
- * Mobile-First, Three.js 3D, Touch Signature, WhatsApp Engine & Parametric Budget
+ * Versão 3.0 - Multi-Thread, Auto-Sincronização, Lazy Three.js 3D & Cálculos Reativos
  */
 
 // ESTADO GLOBAL DA APLICAÇÃO
 let appState = {
+  lastModified: Date.now(),
   client: {
     name: "João Carlos Ferreira",
     phone: "5511998877665",
@@ -135,12 +136,12 @@ let serverInfo = {
 // INICIALIZAÇÃO DO SISTEMA
 // ====================================================================
 document.addEventListener("DOMContentLoaded", async () => {
-  // Inicializa ícones Lucide
+  // Ícones Lucide
   if (window.lucide) {
     lucide.createIcons();
   }
 
-  // Limpa caches antigos e registra Service Worker com auto-update
+  // Auto-limpeza de caches legados
   if ('caches' in window) {
     caches.keys().then(keys => {
       keys.forEach(k => {
@@ -148,37 +149,39 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
   }
+
+  // Registra Service Worker v3 com auto-update
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js?v=20260914v3').then(reg => {
       reg.update();
     }).catch(() => {});
   }
 
-  // Tenta carregar dados do servidor ou localStorage
+  // Carrega estado persistido
   await fetchServerInfo();
   await loadState();
 
-  // Popula os formulários e tabelas
+  // Popula formulários e telas
   populateClientForm();
   renderCatalogItems();
+  populateQuickAreaSelect();
+
+  // Inicializa Slider de Margem com valor persistido
+  const savedMargin = appState.budgetSettings.margin || 25;
+  const slider = document.getElementById('marginSlider');
+  if (slider) slider.value = savedMargin;
+  const marginBadge = document.getElementById('marginValueBadge');
+  if (marginBadge) marginBadge.innerText = savedMargin + "%";
+
+  // Recalcula orçamentos e renderiza módulos
   recalculateBudget();
   renderFinancials();
   initSignatureCanvas();
-  initThreeJs();
-
-  // Atualiza prévias de recibo e texto
   updateReceiptPreview();
 
-  // Event listener para redimensionamento
+  // Redimensionamento global do Three.js
   window.addEventListener('resize', () => {
-    if (renderer && camera) {
-      const container = document.getElementById('threejsCanvas');
-      if (container && container.clientWidth > 0) {
-        camera.aspect = container.clientWidth / container.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(container.clientWidth, container.clientHeight);
-      }
-    }
+    checkAndResizeThreeJs();
   });
 });
 
@@ -187,7 +190,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ====================================================================
 async function fetchServerInfo() {
   try {
-    const res = await fetch('/api/info');
+    const res = await fetch('/api/info', { cache: 'no-store' });
     if (res.ok) {
       serverInfo = await res.json();
       const mobileDisplay = document.getElementById('mobileUrlDisplay');
@@ -196,39 +199,57 @@ async function fetchServerInfo() {
       }
     }
   } catch (err) {
-    console.warn("Executando em modo isolado/offline:", err);
+    console.warn("Modo isolado/offline:", err);
   }
 }
 
 async function loadState() {
+  let serverData = null;
   try {
-    const res = await fetch('/api/data');
+    const res = await fetch('/api/data', { cache: 'no-store' });
     if (res.ok) {
-      const data = await res.json();
-      if (data && data.client) {
-        appState = data;
-        updateSyncStatus(true);
-        return;
-      }
+      serverData = await res.json();
     }
   } catch (err) {
-    console.warn("Servidor offline, tentando localStorage");
+    console.warn("Servidor offline, verificando localStorage");
   }
 
+  let localData = null;
   const local = localStorage.getItem('alex_app_state');
   if (local) {
     try {
-      appState = JSON.parse(local);
-      updateSyncStatus(false);
+      localData = JSON.parse(local);
     } catch (e) {}
+  }
+
+  // Prioriza os dados mais recentes comparando timestamps
+  if (localData && (!serverData || !serverData.client || (localData.lastModified && localData.lastModified > (serverData.lastModified || 0)))) {
+    appState = localData;
+    updateSyncStatus(false);
+    // Envia dados locais para atualizar o servidor se ele estiver online
+    if (serverData) {
+      saveAllData(false);
+    }
+    return;
+  }
+
+  if (serverData && serverData.client) {
+    appState = serverData;
+    localStorage.setItem('alex_app_state', JSON.stringify(appState));
+    updateSyncStatus(true);
+    return;
+  }
+
+  if (localData) {
+    appState = localData;
+    updateSyncStatus(false);
   }
 }
 
 async function saveAllData(showFeedback = true) {
-  // Atualiza localStorage
+  appState.lastModified = Date.now();
   localStorage.setItem('alex_app_state', JSON.stringify(appState));
 
-  // Tenta sincronizar com o backend
   let synced = false;
   try {
     const res = await fetch('/api/data', {
@@ -246,7 +267,7 @@ async function saveAllData(showFeedback = true) {
   updateSyncStatus(synced);
 
   if (showFeedback) {
-    showToast(synced ? "Dados sincronizados com o Computador e Celular!" : "Salvo localmente (Dispositivo Offline)");
+    showToast(synced ? "✅ Dados sincronizados com o Computador e Celular!" : "💾 Salvo localmente (Dispositivo Offline)");
   }
 }
 
@@ -258,7 +279,7 @@ function updateSyncStatus(isOnline) {
     badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> Sincronizado';
   } else {
     badge.className = "hidden md:flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950 text-amber-400 border border-amber-800";
-    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span> Modo Offline';
+    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span> Modo Local';
   }
 }
 
@@ -301,16 +322,7 @@ function switchTab(tabId) {
   } else if (tabId === 'recibos') {
     renderFinancials();
   } else if (tabId === 'visualizador') {
-    setTimeout(() => {
-      if (renderer && camera) {
-        const container = document.getElementById('threejsCanvas');
-        if (container) {
-          camera.aspect = container.clientWidth / container.clientHeight;
-          camera.updateProjectionMatrix();
-          renderer.setSize(container.clientWidth, container.clientHeight);
-        }
-      }
-    }, 100);
+    setTimeout(checkAndResizeThreeJs, 60);
   }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -320,7 +332,7 @@ function switchTab(tabId) {
 // MÓDULO 1: CLIENTE & WHATSAPP
 // ====================================================================
 function populateClientForm() {
-  const c = appState.client;
+  const c = appState.client || {};
   document.getElementById('clientName').value = c.name || "";
   document.getElementById('clientPhone').value = c.phone || "";
   document.getElementById('clientAddress').value = c.address || "";
@@ -329,15 +341,42 @@ function populateClientForm() {
   document.getElementById('clientNotes').value = c.notes || "";
 }
 
+function clearClientForm() {
+  document.getElementById('clientName').value = "";
+  document.getElementById('clientPhone').value = "";
+  document.getElementById('clientAddress').value = "";
+  document.getElementById('clientCpf').value = "";
+  document.getElementById('clientStartDate').value = "";
+  document.getElementById('clientNotes').value = "";
+  document.getElementById('clientName').focus();
+  showToast("Formulário limpo! Digite os dados do novo cliente.");
+}
+
 function saveClientData() {
-  appState.client.name = document.getElementById('clientName').value;
-  appState.client.phone = document.getElementById('clientPhone').value.replace(/\D/g, '');
-  appState.client.address = document.getElementById('clientAddress').value;
-  appState.client.cpf = document.getElementById('clientCpf').value;
-  appState.client.startDate = document.getElementById('clientStartDate').value;
-  appState.client.notes = document.getElementById('clientNotes').value;
+  const name = document.getElementById('clientName').value.trim();
+  if (!name) {
+    alert("Por favor, preencha o Nome Completo do Cliente.");
+    document.getElementById('clientName').focus();
+    return;
+  }
+
+  appState.client = {
+    name: name,
+    phone: document.getElementById('clientPhone').value.replace(/\D/g, ''),
+    address: document.getElementById('clientAddress').value.trim(),
+    cpf: document.getElementById('clientCpf').value.trim(),
+    startDate: document.getElementById('clientStartDate').value,
+    notes: document.getElementById('clientNotes').value.trim()
+  };
+
+  // Atualiza imediatamente todos os outros módulos com os novos dados
+  updateContractDocument();
+  updateMemorialContent();
+  updateReceiptPreview();
+  renderFinancials();
 
   saveAllData(true);
+  showToast(`✅ Cliente "${name}" cadastrado e sincronizado com sucesso!`);
 }
 
 function sendWhatsAppTemplate(type) {
@@ -369,17 +408,33 @@ function calcQuickArea() {
   document.getElementById('quickAreaResult').innerText = area.toFixed(2).replace('.', ',') + " m²";
 }
 
-function applyQuickAreaToPrompt() {
+function populateQuickAreaSelect() {
+  const select = document.getElementById('quickAreaTargetSelect');
+  if (!select) return;
+  select.innerHTML = "";
+  appState.catalog.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.code;
+    opt.innerText = `${item.code} - ${item.name} (${item.unit})`;
+    if (item.code === 'CIV-03' || item.unit === 'm²') {
+      opt.selected = true;
+    }
+    select.appendChild(opt);
+  });
+}
+
+function applyQuickAreaToSelectedService() {
   const l = parseFloat(document.getElementById('quickLength').value) || 0;
   const w = parseFloat(document.getElementById('quickWidth').value) || 0;
   const area = l * w;
   if (area <= 0) {
-    alert("Por favor, insira o Comprimento e a Largura primeiro.");
+    alert("Por favor, insira o Comprimento e a Largura primeiro (resultado maior que zero).");
+    document.getElementById('quickLength').focus();
     return;
   }
 
-  const code = prompt("Para qual serviço deseja aplicar " + area.toFixed(2) + " m²?\n(Ex: CIV-01, CIV-02, CIV-03, PIN-01)", "CIV-03");
-  if (!code) return;
+  const select = document.getElementById('quickAreaTargetSelect');
+  const code = select ? select.value : "CIV-03";
 
   const item = appState.catalog.find(i => i.code.toUpperCase() === code.trim().toUpperCase());
   if (item) {
@@ -387,9 +442,9 @@ function applyQuickAreaToPrompt() {
     renderCatalogItems();
     recalculateBudget();
     saveAllData(false);
-    showToast(`Área de ${area.toFixed(2)} m² atribuída ao item ${item.code}!`);
+    showToast(`✅ ${area.toFixed(2)} m² aplicados com sucesso no item ${item.code}!`);
   } else {
-    alert("Código não encontrado na tabela.");
+    alert("Selecione um serviço válido na lista.");
   }
 }
 
@@ -403,7 +458,6 @@ function renderCatalogItems() {
     const card = document.createElement('div');
     card.className = "bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-md hover:border-slate-700 transition";
 
-    const subtotalDirect = (item.quantity || 0) * item.directCost;
     const subtotalSale = (item.quantity || 0) * item.suggestedPrice;
 
     card.innerHTML = `
@@ -430,15 +484,20 @@ function renderCatalogItems() {
         <div class="flex items-center space-x-2">
           <label class="text-xs font-bold text-slate-400 uppercase">Qtd:</label>
           <div class="flex items-center border border-slate-700 rounded-xl bg-slate-900 overflow-hidden">
-            <button onclick="changeItemQty(${index}, -1)" class="w-9 h-9 flex items-center justify-center text-slate-300 hover:bg-slate-800 font-bold">-</button>
-            <input type="number" step="0.5" min="0" value="${item.quantity || 0}" onchange="setItemQty(${index}, this.value)" class="w-16 h-9 bg-transparent text-center font-bold text-white text-sm outline-none">
-            <button onclick="changeItemQty(${index}, 1)" class="w-9 h-9 flex items-center justify-center text-slate-300 hover:bg-slate-800 font-bold">+</button>
+            <button type="button" onclick="changeItemQty(${index}, -1)" class="w-9 h-9 flex items-center justify-center text-slate-300 hover:bg-slate-800 font-bold">-</button>
+            <input type="number" step="0.5" min="0" id="item-qty-input-${index}" value="${item.quantity || 0}" 
+                   oninput="setItemQty(${index}, this.value)" 
+                   onchange="setItemQty(${index}, this.value)" 
+                   class="w-16 h-9 bg-transparent text-center font-bold text-white text-sm outline-none">
+            <button type="button" onclick="changeItemQty(${index}, 1)" class="w-9 h-9 flex items-center justify-center text-slate-300 hover:bg-slate-800 font-bold">+</button>
           </div>
         </div>
 
         <div class="text-right">
           <span class="text-[10px] text-slate-400 uppercase font-bold block">Subtotal Sugerido:</span>
-          <span class="text-base sm:text-lg font-black text-brand-orange">R$ ${subtotalSale.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+          <span id="item-subtotal-${index}" class="text-base sm:text-lg font-black text-brand-orange">
+            R$ ${subtotalSale.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          </span>
         </div>
       </div>
     `;
@@ -452,7 +511,11 @@ function changeItemQty(idx, delta) {
   const cur = appState.catalog[idx].quantity || 0;
   const next = Math.max(0, cur + delta);
   appState.catalog[idx].quantity = next;
-  renderCatalogItems();
+  
+  const input = document.getElementById(`item-qty-input-${idx}`);
+  if (input) input.value = next;
+  
+  updateSingleItemSubtotal(idx);
   recalculateBudget();
   saveAllData(false);
 }
@@ -460,14 +523,24 @@ function changeItemQty(idx, delta) {
 function setItemQty(idx, val) {
   const parsed = Math.max(0, parseFloat(val) || 0);
   appState.catalog[idx].quantity = parsed;
-  renderCatalogItems();
+  updateSingleItemSubtotal(idx);
   recalculateBudget();
   saveAllData(false);
 }
 
+function updateSingleItemSubtotal(idx) {
+  const item = appState.catalog[idx];
+  const subtotalEl = document.getElementById(`item-subtotal-${idx}`);
+  if (item && subtotalEl) {
+    const subtotalSale = (item.quantity || 0) * item.suggestedPrice;
+    subtotalEl.innerText = `R$ ${subtotalSale.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  }
+}
+
 function updateMarginFromSlider(val) {
   appState.budgetSettings.margin = parseInt(val, 10);
-  document.getElementById('marginValueBadge').innerText = val + "%";
+  const badge = document.getElementById('marginValueBadge');
+  if (badge) badge.innerText = val + "%";
   recalculateBudget();
   saveAllData(false);
 }
@@ -477,27 +550,26 @@ function recalculateBudget() {
   const bdi = appState.budgetSettings.bdi || 15;
 
   let totalDirectCost = 0;
-  let totalBaseSale = 0;
 
   appState.catalog.forEach(item => {
     const q = item.quantity || 0;
     totalDirectCost += q * item.directCost;
-    totalBaseSale += q * item.suggestedPrice;
   });
 
   const bdiCost = totalDirectCost * (bdi / 100);
-
-  // Preço de venda ponderado pela margem (base: Custo Direto + BDI ajustado pela margem desejada)
-  // Margem de Negociação entre 10% e 35%
-  // Preço Final = (Custo Direto + BDI) / (1 - Margem/100)
   const factor = Math.max(0.01, 1 - (margin / 100));
   const finalSalePrice = (totalDirectCost + bdiCost) / factor;
   const profitExpected = finalSalePrice - totalDirectCost - bdiCost;
 
-  document.getElementById('totalDirectCostDisplay').innerText = `R$ ${totalDirectCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  document.getElementById('totalBdiCostDisplay').innerText = `R$ ${bdiCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  document.getElementById('totalProfitExpectedDisplay').innerText = `R$ ${profitExpected.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  document.getElementById('totalSalePriceDisplay').innerText = `R$ ${finalSalePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  const directEl = document.getElementById('totalDirectCostDisplay');
+  const bdiEl = document.getElementById('totalBdiCostDisplay');
+  const profitEl = document.getElementById('totalProfitExpectedDisplay');
+  const saleEl = document.getElementById('totalSalePriceDisplay');
+
+  if (directEl) directEl.innerText = `R$ ${totalDirectCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (bdiEl) bdiEl.innerText = `R$ ${bdiCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (profitEl) profitEl.innerText = `R$ ${profitExpected.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (saleEl) saleEl.innerText = `R$ ${finalSalePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
   // Alerta Visual de Margem Mínima < 12%
   const globalAlert = document.getElementById('globalMarginAlert');
@@ -516,6 +588,10 @@ function recalculateBudget() {
       warningBadge.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 mr-1"></i> Margem Segura`;
     }
   }
+
+  // Atualiza sincronamente o Contrato e o Painel de Recibos
+  renderFinancials();
+  updateContractDocument();
 
   if (window.lucide) lucide.createIcons();
 }
@@ -540,7 +616,7 @@ function updateMemorialContent() {
   if (!box) return;
 
   const activeItems = appState.catalog.filter(i => (i.quantity || 0) > 0);
-  const client = appState.client;
+  const client = appState.client || {};
 
   let html = `
     <div class="border-b border-slate-800 pb-4">
@@ -566,7 +642,7 @@ function updateMemorialContent() {
   `;
 
   if (activeItems.length === 0) {
-    html += `<p class="text-xs text-amber-400 col-span-2">Nenhum item com quantidade lançada na calculadora. Lance as quantidades para visualizar as diretrizes técnicas.</p>`;
+    html += `<p class="text-xs text-amber-400 col-span-2">Nenhum item com quantidade lançada na calculadora. Lance as medidas para visualizar as diretrizes técnicas.</p>`;
   } else {
     activeItems.forEach(item => {
       html += `
@@ -626,26 +702,50 @@ function sendMemorialWhatsApp() {
 }
 
 // ====================================================================
-// MÓDULO 4: VISUALIZADOR 3D / THREE.JS & SLIDER ANTES VS DEPOIS
+// MÓDULO 4: VISUALIZADOR 3D / THREE.JS (LAZY LOAD ROBUSTO)
 // ====================================================================
 let scene, camera, renderer, controls;
 let roofMesh, wallsGroup, floorMesh, openingsGroup;
-let isVisualizer3dActive = true;
+let threeJsInitialized = false;
 
-function initThreeJs() {
+function checkAndResizeThreeJs() {
   const container = document.getElementById('threejsCanvas');
   if (!container || !window.THREE) return;
+
+  const w = container.clientWidth || 800;
+  const h = container.clientHeight || 450;
+
+  if (w <= 0 || h <= 0) return;
+
+  if (!threeJsInitialized) {
+    initThreeJs(w, h);
+  } else if (renderer && camera) {
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+    if (controls) controls.update();
+    renderer.render(scene, camera);
+  }
+}
+
+function initThreeJs(w, h) {
+  const container = document.getElementById('threejsCanvas');
+  if (!container || !window.THREE || threeJsInitialized) return;
+
+  const width = w || container.clientWidth || 800;
+  const height = h || container.clientHeight || 450;
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0a0f1d);
 
-  camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
   camera.position.set(12, 10, 14);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setSize(width, height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
+  container.innerHTML = "";
   container.appendChild(renderer.domElement);
 
   if (window.THREE.OrbitControls) {
@@ -653,9 +753,10 @@ function initThreeJs() {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.maxPolarAngle = Math.PI / 2 - 0.05;
+    controls.target.set(0, 1.5, 0);
   }
 
-  // Iluminação
+  // Iluminação Realista
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
   scene.add(ambientLight);
 
@@ -726,7 +827,7 @@ function initThreeJs() {
   rightWallVigaPorta.position.set(5, 2.9, 2);
   wallsGroup.add(rightWallVigaPorta);
 
-  // Moldura de Aço Estrutural Alex Construções
+  // Colunas de Aço Estrutural Alex Construções
   const beamLeft = new THREE.Mesh(new THREE.BoxGeometry(0.35, 3.6, 0.35), darkSteelMat);
   beamLeft.position.set(-5, 1.8, 4);
   wallsGroup.add(beamLeft);
@@ -746,7 +847,9 @@ function initThreeJs() {
   roofMesh.castShadow = true;
   scene.add(roofMesh);
 
-  // Loop de Animação
+  threeJsInitialized = true;
+
+  // Loop de renderização
   function animate() {
     requestAnimationFrame(animate);
     if (controls) controls.update();
@@ -786,21 +889,12 @@ function switchVisualizerMode(mode) {
     containerSlider.classList.add('hidden');
     btn3d.className = "touch-btn px-5 py-2.5 rounded-xl font-black text-sm bg-brand-blue text-white shadow-md";
     btnSlider.className = "touch-btn px-5 py-2.5 rounded-xl font-black text-sm bg-slate-800 text-slate-400 hover:text-white";
-    isVisualizer3dActive = true;
-    setTimeout(() => {
-      if (renderer && camera) {
-        const c = document.getElementById('threejsCanvas');
-        camera.aspect = c.clientWidth / c.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(c.clientWidth, c.clientHeight);
-      }
-    }, 50);
+    setTimeout(checkAndResizeThreeJs, 50);
   } else {
     container3d.classList.add('hidden');
     containerSlider.classList.remove('hidden');
     btnSlider.className = "touch-btn px-5 py-2.5 rounded-xl font-black text-sm bg-brand-blue text-white shadow-md";
     btn3d.className = "touch-btn px-5 py-2.5 rounded-xl font-black text-sm bg-slate-800 text-slate-400 hover:text-white";
-    isVisualizer3dActive = false;
   }
 }
 
@@ -815,25 +909,38 @@ function updateBeforeAfterSlider(val) {
 // MÓDULO 5: CONTRATO BLINDADO & ASSINATURA TOUCH DIGITAL
 // ====================================================================
 function updateContractDocument() {
-  const c = appState.client;
+  const c = appState.client || {};
   const total = calculateTotalSalePrice();
 
-  document.getElementById('contractClientNameDisplay').innerText = c.name || "Não informado";
-  document.getElementById('contractClientCpfDisplay').innerText = c.cpf || "Não informado";
-  document.getElementById('contractClientAddressDisplay').innerText = c.address || "Não informado";
-  document.getElementById('contractClientPhoneDisplay').innerText = c.phone || "Não informado";
-  document.getElementById('contractStartDateDisplay').innerText = c.startDate || "Imediato";
-  document.getElementById('contractClientSignatory').innerText = c.name ? c.name.toUpperCase() : "CONTRATANTE";
+  const nameEl = document.getElementById('contractClientNameDisplay');
+  const cpfEl = document.getElementById('contractClientCpfDisplay');
+  const addrEl = document.getElementById('contractClientAddressDisplay');
+  const phoneEl = document.getElementById('contractClientPhoneDisplay');
+  const dateEl = document.getElementById('contractStartDateDisplay');
+  const signatoryEl = document.getElementById('contractClientSignatory');
 
-  document.getElementById('contractTotalValueDisplay').innerText = `R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (nameEl) nameEl.innerText = c.name || "Não informado";
+  if (cpfEl) cpfEl.innerText = c.cpf || "Não informado";
+  if (addrEl) addrEl.innerText = c.address || "Não informado";
+  if (phoneEl) phoneEl.innerText = c.phone || "Não informado";
+  if (dateEl) dateEl.innerText = c.startDate || "Imediato";
+  if (signatoryEl) signatoryEl.innerText = c.name ? c.name.toUpperCase() : "CONTRATANTE";
+
+  const totalEl = document.getElementById('contractTotalValueDisplay');
+  if (totalEl) totalEl.innerText = `R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
   const p30 = total * 0.30;
   const p10 = total * 0.10;
 
-  document.getElementById('contractPart1').innerText = `R$ ${p30.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  document.getElementById('contractPart2').innerText = `R$ ${p30.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  document.getElementById('contractPart3').innerText = `R$ ${p30.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  document.getElementById('contractPart4').innerText = `R$ ${p10.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  const part1El = document.getElementById('contractPart1');
+  const part2El = document.getElementById('contractPart2');
+  const part3El = document.getElementById('contractPart3');
+  const part4El = document.getElementById('contractPart4');
+
+  if (part1El) part1El.innerText = `R$ ${p30.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (part2El) part2El.innerText = `R$ ${p30.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (part3El) part3El.innerText = `R$ ${p30.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (part4El) part4El.innerText = `R$ ${p10.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
   const list = document.getElementById('contractServicesList');
   if (list) {
@@ -952,23 +1059,29 @@ function renderFinancials() {
   const totalFechado = calculateTotalSalePrice();
 
   let totalPago = 0;
-  appState.financials.receipts.forEach(r => {
+  (appState.financials.receipts || []).forEach(r => {
     totalPago += parseFloat(r.amount) || 0;
   });
 
   let totalGastos = 0;
-  appState.financials.expenses.forEach(e => {
+  (appState.financials.expenses || []).forEach(e => {
     totalGastos += parseFloat(e.amount) || 0;
   });
 
   const saldoDevedor = Math.max(0, totalFechado - totalPago);
   const lucroRealizado = totalPago - totalGastos;
 
-  document.getElementById('kpiTotalFechado').innerText = `R$ ${totalFechado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  document.getElementById('kpiTotalPago').innerText = `R$ ${totalPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  document.getElementById('kpiSaldoDevedor').innerText = `R$ ${saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  document.getElementById('kpiGastosCanteiro').innerText = `R$ ${totalGastos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  document.getElementById('kpiLucroRealizado').innerText = `R$ ${lucroRealizado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  const fechadoEl = document.getElementById('kpiTotalFechado');
+  const pagoEl = document.getElementById('kpiTotalPago');
+  const saldoEl = document.getElementById('kpiSaldoDevedor');
+  const gastosEl = document.getElementById('kpiGastosCanteiro');
+  const lucroEl = document.getElementById('kpiLucroRealizado');
+
+  if (fechadoEl) fechadoEl.innerText = `R$ ${totalFechado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (pagoEl) pagoEl.innerText = `R$ ${totalPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (saldoEl) saldoEl.innerText = `R$ ${saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (gastosEl) gastosEl.innerText = `R$ ${totalGastos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  if (lucroEl) lucroEl.innerText = `R$ ${lucroRealizado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
   // Renderiza Histórico de Recibos
   const receiptsList = document.getElementById('receiptsHistoryList');
@@ -977,7 +1090,7 @@ function renderFinancials() {
     if (appState.financials.receipts.length === 0) {
       receiptsList.innerHTML = `<p class="text-xs text-slate-500 py-2">Nenhum recibo emitido ainda.</p>`;
     } else {
-      appState.financials.receipts.slice().reverse().forEach((rec, idx) => {
+      appState.financials.receipts.slice().reverse().forEach(rec => {
         const item = document.createElement('div');
         item.className = "bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between";
         item.innerHTML = `
@@ -1021,13 +1134,13 @@ function renderFinancials() {
 }
 
 function updateReceiptPreview() {
-  const val = parseFloat(document.getElementById('receiptAmountInput').value) || 0;
-  const stage = document.getElementById('receiptStageSelect').value;
-  const clientName = appState.client.name || "[Nome do Cliente]";
+  const val = parseFloat(document.getElementById('receiptAmountInput')?.value) || 0;
+  const stage = document.getElementById('receiptStageSelect')?.value || "Sinal / Entrada (30%)";
+  const clientName = appState.client?.name || "[Nome do Cliente]";
   const totalFechado = calculateTotalSalePrice();
 
   let totalPago = 0;
-  appState.financials.receipts.forEach(r => totalPago += (parseFloat(r.amount) || 0));
+  (appState.financials.receipts || []).forEach(r => totalPago += (parseFloat(r.amount) || 0));
   const saldoRestante = Math.max(0, totalFechado - (totalPago + val));
 
   const text = `Recebemos de *${clientName}* a quantia de *R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}* referente à etapa *${stage}* da Alex Construções. Saldo restante: *R$ ${saldoRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*.`;
@@ -1052,7 +1165,7 @@ function emitAndSendReceipt() {
 
   const method = document.getElementById('receiptPaymentMethod').value;
   const stage = document.getElementById('receiptStageSelect').value;
-  const clientName = appState.client.name || "Cliente";
+  const clientName = appState.client?.name || "Cliente";
   const totalFechado = calculateTotalSalePrice();
 
   let totalPagoAnterior = 0;
@@ -1077,7 +1190,7 @@ function emitAndSendReceipt() {
   document.getElementById('receiptAmountInput').value = "";
 
   // Disparo WhatsApp
-  const phone = appState.client.phone || "";
+  const phone = appState.client?.phone || "";
   const msg = `Recebemos de *${clientName}* a quantia de *R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}* referente à etapa *${stage}* da Alex Construções. Saldo restante: *R$ ${saldoRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*.\n\nForma de Pagamento: ${method}.\nAgradecemos a confiança! 🤝🛠️`;
   const encoded = encodeURIComponent(msg);
   const targetUrl = phone ? `https://api.whatsapp.com/send?phone=${phone}&text=${encoded}` : `https://api.whatsapp.com/send?text=${encoded}`;
@@ -1188,6 +1301,7 @@ function saveNewCustomItem() {
 
   saveAllData(true);
   renderCatalogItems();
+  populateQuickAreaSelect();
   recalculateBudget();
   closeNewItemModal();
   showToast(`Item ${code} cadastrado com sucesso!`);

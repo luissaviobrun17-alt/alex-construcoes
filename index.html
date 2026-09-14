@@ -297,7 +297,11 @@
         </div>
 
         <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
-          <button onclick="saveClientData()" class="touch-btn px-6 py-3.5 bg-brand-blue hover:bg-blue-800 text-white font-bold rounded-xl shadow-lg flex items-center justify-center space-x-2">
+          <button type="button" onclick="clearClientForm()" class="touch-btn px-5 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700 flex items-center justify-center space-x-2">
+            <i data-lucide="user-x" class="w-5 h-5 text-amber-400"></i>
+            <span>Novo Cadastro (Limpar)</span>
+          </button>
+          <button type="button" onclick="saveClientData()" class="touch-btn px-6 py-3.5 bg-brand-blue hover:bg-blue-800 text-white font-bold rounded-xl shadow-lg flex items-center justify-center space-x-2">
             <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
             <span>Salvar Informações do Cliente</span>
           </button>
@@ -382,14 +386,14 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
           <div>
             <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Comprimento (m)</label>
-            <input type="number" id="quickLength" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold text-lg" placeholder="0.00" oninput="calcQuickArea()">
+            <input type="number" id="quickLength" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold text-lg outline-none focus:border-brand-orange" placeholder="0.00" oninput="calcQuickArea()">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Largura (m)</label>
-            <input type="number" id="quickWidth" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold text-lg" placeholder="0.00" oninput="calcQuickArea()">
+            <input type="number" id="quickWidth" step="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold text-lg outline-none focus:border-brand-orange" placeholder="0.00" oninput="calcQuickArea()">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Área Calculada</label>
@@ -398,9 +402,15 @@
             </div>
           </div>
           <div>
-            <button onclick="applyQuickAreaToPrompt()" class="touch-btn w-full bg-brand-orange hover:bg-orange-700 text-white font-bold text-sm">
-              <i data-lucide="corner-down-right" class="w-5 h-5 mr-1"></i>
-              <span>Aplicar em Item</span>
+            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Aplicar no Serviço:</label>
+            <select id="quickAreaTargetSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3.5 text-white font-bold text-xs outline-none focus:border-brand-orange">
+              <!-- Preenchido dinamicamente com os itens do catálogo -->
+            </select>
+          </div>
+          <div>
+            <button type="button" onclick="applyQuickAreaToSelectedService()" class="touch-btn w-full bg-brand-orange hover:bg-orange-700 text-white font-bold text-sm shadow-md">
+              <i data-lucide="check" class="w-5 h-5 mr-1"></i>
+              <span>Aplicar Área</span>
             </button>
           </div>
         </div>

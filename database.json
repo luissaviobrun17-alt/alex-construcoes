@@ -1,11 +1,11 @@
 {
   "client": {
-    "name": "João Carlos Ferreira",
+    "name": "Luis Savio Brun",
     "phone": "5511998877665",
-    "address": "Rua das Laranjeiras, 450 - Bairro Jardim América",
+    "address": "Av. Paulista, 1000 - Canteiro Central",
     "cpf": "123.456.789-00",
     "startDate": "2026-09-20",
-    "notes": "Teste de sincronizacao concluido com sucesso"
+    "notes": "Cliente validado no sistema Alex Construcoes"
   },
   "budgetSettings": {
     "bdi": 15,
@@ -81,6 +81,16 @@
       "suggestedPrice": 38,
       "quantity": 110,
       "description": "Preparo de superfícies com fundo preparador, lixamento fino, aplicação de duas demãos de massa corrida/acrílica e pintura final com 2 a 3 demãos de tinta acrílica premium acabamento fosco lavável."
+    },
+    {
+      "code": "CASA DO LUIS BRUN",
+      "discipline": "Elétrica",
+      "name": "Redformular a fiação interna",
+      "unit": "m²",
+      "directCost": 100,
+      "suggestedPrice": 150,
+      "quantity": 1,
+      "description": "trocar a fiação completa da cozinha"
     }
   ],
   "financials": {
@@ -116,5 +126,6 @@
     "signedAt": "",
     "signatureBase64": "",
     "clientSigned": false
-  }
+  },
+  "lastModified": 1789418050845
 }
