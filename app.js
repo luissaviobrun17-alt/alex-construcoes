@@ -745,8 +745,6 @@ function sendWhatsAppTemplate(type) {
   let text = "";
   if (type === 'welcome') {
     text = `Olá, *${c.name}*! Tudo bem? 🛠️\n\nAqui é da equipe técnica da *Alex Construções*.\nConfirmamos o início dos trabalhos e mobilização de nossa equipe para a sua obra no endereço:\n📍 *${c.address}*.\n\nNosso compromisso é entregar máxima solidez, segurança e acabamento refinado conforme as normas de engenharia. Qualquer dúvida estamos à total disposição! 🤝`;
-  } else if (type === 'budget') {
-    text = `Olá, *${c.name}*! Segue a proposta técnica orçamentária da *Alex Construções* para o seu projeto:\n\n💰 *Valor Total da Empreitada:* R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n\n📋 *Condições Facilitadas de Pagamento:*\n• Sinal / Mobilização: 30%\n• 1ª Medição Intermediária: 30%\n• 2ª Medição Intermediária: 30%\n• Entrega Final e Vistoria: 10%\n\n🛡️ Garantia de 5 anos (Art. 618 do Código Civil).\nPodemos emitir o contrato e agendar o início?`;
   } else if (type === 'measurement') {
     text = `Prezado(a) *${c.name}*, informamos que concluímos mais uma etapa construtiva da sua obra com sucesso! 📐✨\n\nNossa vistoria técnica de medição foi realizada. Convidamos você para conferir os acabamentos executados e validarmos a liberação da medição seguinte.\n\nAlex Construções - Engenharia e Rigor em Campo.`;
   }
@@ -755,6 +753,167 @@ function sendWhatsAppTemplate(type) {
   const targetUrl = phone ? `https://api.whatsapp.com/send?phone=${phone}&text=${encoded}` : `https://api.whatsapp.com/send?text=${encoded}`;
   window.open(targetUrl, '_blank');
 }
+
+// ─── MODAL REVISÃO & EDIÇÃO DO ORÇAMENTO ─────────────────────────────────────
+
+// Estado interno do modal (checkboxes de serviços)
+let _brServiceState = {};
+
+function openBudgetReviewModal() {
+  const modal = document.getElementById('budgetReviewModal');
+  if (!modal) return;
+
+  const c = appState.client || {};
+  const total = calculateTotalSalePrice();
+
+  // Preencher cabeçalho do cliente
+  const nameEl = document.getElementById('brClientName');
+  const addrEl = document.getElementById('brClientAddress');
+  if (nameEl) nameEl.textContent = c.name || 'Cliente não informado';
+  if (addrEl) addrEl.textContent = (c.address || '') + (c.email ? ' | ' + c.email : '');
+
+  // Preencher valores financeiros com os valores calculados atuais
+  const fmt = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  document.getElementById('brTotalValue').value = fmt(total);
+  document.getElementById('brValidade').value = '7 dias úteis';
+  document.getElementById('brP1').value = 30;
+  document.getElementById('brP2').value = 30;
+  document.getElementById('brP3').value = 30;
+  document.getElementById('brP4').value = 10;
+
+  // Montar lista de serviços com checkboxes
+  const activeItems = (appState.catalog || []).filter(i => (i.quantity || 0) > 0);
+  _brServiceState = {};
+  activeItems.forEach(i => { _brServiceState[i.code] = true; });
+
+  const listEl = document.getElementById('brServicesList');
+  const noSvcEl = document.getElementById('brNoServices');
+
+  if (activeItems.length === 0) {
+    listEl.innerHTML = '';
+    if (noSvcEl) noSvcEl.classList.remove('hidden');
+  } else {
+    if (noSvcEl) noSvcEl.classList.add('hidden');
+    listEl.innerHTML = activeItems.map(i => {
+      const subtotal = (i.quantity || 0) * (i.directCost || 0);
+      return `
+        <label class="flex items-center gap-3 bg-slate-800/60 border border-slate-700 rounded-xl px-3 py-2.5 cursor-pointer hover:border-cyan-700 transition group">
+          <input type="checkbox" checked data-code="${i.code}"
+            onchange="_brServiceState['${i.code}']=this.checked; regenerateBudgetPreview()"
+            class="w-4 h-4 accent-cyan-500 flex-shrink-0">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-bold text-white truncate">${i.name}</p>
+            <p class="text-xs text-slate-400">${i.quantity} ${i.unit} · R$ ${subtotal.toLocaleString('pt-BR', {minimumFractionDigits:2})}</p>
+          </div>
+          <span class="text-xs text-slate-500 font-mono flex-shrink-0">${i.code}</span>
+        </label>`;
+    }).join('');
+  }
+
+  // Gerar prévia inicial
+  regenerateBudgetPreview();
+
+  modal.classList.remove('hidden');
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeBudgetReviewModal() {
+  const modal = document.getElementById('budgetReviewModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function regenerateBudgetPreview() {
+  const c = appState.client || {};
+  const totalRaw = document.getElementById('brTotalValue').value.replace(/\./g, '').replace(',', '.');
+  const total = parseFloat(totalRaw) || 0;
+  const validade = document.getElementById('brValidade').value.trim() || '7 dias úteis';
+  const p1 = parseFloat(document.getElementById('brP1').value) || 0;
+  const p2 = parseFloat(document.getElementById('brP2').value) || 0;
+  const p3 = parseFloat(document.getElementById('brP3').value) || 0;
+  const p4 = parseFloat(document.getElementById('brP4').value) || 0;
+
+  // Alerta soma parcelas
+  const soma = p1 + p2 + p3 + p4;
+  const alertEl = document.getElementById('brParcelasAlert');
+  if (alertEl) {
+    if (Math.abs(soma - 100) > 0.01) {
+      alertEl.classList.remove('hidden');
+    } else {
+      alertEl.classList.add('hidden');
+    }
+  }
+
+  // Calcular valores de cada parcela
+  const fmt = (v) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  const val1 = total * p1 / 100;
+  const val2 = total * p2 / 100;
+  const val3 = total * p3 / 100;
+  const val4 = total * p4 / 100;
+
+  // Montar lista de serviços selecionados
+  const activeItems = (appState.catalog || []).filter(i => (i.quantity || 0) > 0 && _brServiceState[i.code]);
+  const servicosText = activeItems.length > 0
+    ? activeItems.map(i => `  • ${i.name}: ${i.quantity} ${i.unit}`).join('\n')
+    : '  • Escopo a ser detalhado no contrato';
+
+  const totalFmt = fmt(total);
+  const text =
+`Olá, *${c.name || 'Cliente'}*! 👋
+
+Segue a *Proposta Técnica Orçamentária* da *Alex Construções* para o seu projeto:
+
+📍 *Obra:* ${c.address || 'Endereço da obra'}
+
+🔧 *Serviços Incluídos:*
+${servicosText}
+
+💰 *Valor Total da Empreitada:* ${totalFmt}
+
+📋 *Condições de Pagamento:*
+• Sinal / Mobilização (${p1}%): ${fmt(val1)}
+• 1ª Medição Intermediária (${p2}%): ${fmt(val2)}
+• 2ª Medição Intermediária (${p3}%): ${fmt(val3)}
+• Entrega Final e Vistoria (${p4}%): ${fmt(val4)}
+
+⏳ *Validade desta proposta:* ${validade}
+
+🛡️ Garantia de 5 anos (Art. 618 do Código Civil Brasileiro).
+
+Podemos emitir o contrato e agendar o início? Qualquer ajuste, é só nos informar! 🤝
+
+_Alex Construções — Engenharia e Rigor em Campo._`;
+
+  const preview = document.getElementById('brMessagePreview');
+  if (preview) preview.value = text;
+}
+
+function sendBudgetFromModal() {
+  const preview = document.getElementById('brMessagePreview');
+  const text = preview ? preview.value : '';
+  if (!text.trim()) {
+    showToast('Mensagem vazia. Preencha os campos ou clique em Regenerar.');
+    return;
+  }
+  const phone = (appState.client || {}).phone || '';
+  const encoded = encodeURIComponent(text);
+  const url = phone
+    ? `https://api.whatsapp.com/send?phone=${phone}&text=${encoded}`
+    : `https://api.whatsapp.com/send?text=${encoded}`;
+  window.open(url, '_blank');
+}
+
+function copyBudgetFromModal() {
+  const preview = document.getElementById('brMessagePreview');
+  if (!preview || !preview.value.trim()) {
+    showToast('Nada para copiar.');
+    return;
+  }
+  navigator.clipboard.writeText(preview.value).then(() => {
+    showToast('✅ Texto do orçamento copiado para a área de transferência!');
+  });
+}
+
+
 
 // ====================================================================
 // MÓDULO 2: CALCULADORA DE MEDIÇÃO & MOTOR DE ORÇAMENTAÇÃO
