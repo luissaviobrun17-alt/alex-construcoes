@@ -1201,8 +1201,10 @@
   <!-- MODAL: RESUMO RÁPIDO DA OBRA ATIVA                              -->
   <!-- ================================================================ -->
   <div id="obraResumoModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4" onclick="if(event.target===this)closeObraResumoModal()">
-    <div class="bg-slate-900 border-2 border-emerald-700 rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-5">
+    <div class="bg-slate-900 border-2 border-emerald-700 rounded-3xl w-full max-w-lg shadow-2xl relative flex flex-col max-h-[92vh]">
+
+      <!-- HEADER -->
+      <div class="flex items-center justify-between p-5 pb-4 border-b border-slate-800 flex-shrink-0">
         <div class="flex items-center space-x-3">
           <div class="p-3 bg-emerald-950 text-emerald-400 rounded-xl border border-emerald-800">
             <i data-lucide="clipboard-list" class="w-6 h-6"></i>
@@ -1217,19 +1219,50 @@
         </button>
       </div>
 
-      <div class="space-y-3" id="obraResumoContent">
-        <!-- Preenchido dinamicamente por toggleObraResumoModal() -->
+      <!-- BODY SCROLLÁVEL -->
+      <div class="overflow-y-auto flex-1 p-5 space-y-4">
+
+        <!-- Dados da obra -->
+        <div class="space-y-2" id="obraResumoContent">
+          <!-- Preenchido dinamicamente por toggleObraResumoModal() -->
+        </div>
+
+        <!-- DIVISOR -->
+        <div class="border-t border-slate-800 pt-4">
+          <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <i data-lucide="message-square-text" class="w-4 h-4"></i>
+            Mensagem Personalizada para o Cliente
+          </h4>
+          <p class="text-xs text-slate-500 mb-2">Escreva qualquer recado, instrução ou comunicado e envie diretamente pelo WhatsApp.</p>
+          <textarea id="obraResumoMsgBox" rows="5"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white font-mono leading-relaxed focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none resize-y"
+            placeholder="Ex: Olá! Passando para informar que iniciaremos a obra na próxima segunda-feira. Qualquer dúvida, estamos à disposição! 🛠️"></textarea>
+        </div>
       </div>
 
-      <div class="mt-6 flex gap-3 justify-end pt-4 border-t border-slate-800">
-        <button onclick="closeObraResumoModal(); switchTab('cliente')" type="button" class="touch-btn px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm cursor-pointer flex items-center space-x-2">
-          <i data-lucide="edit-3" class="w-4 h-4 text-brand-orange"></i>
-          <span>Editar Obra</span>
-        </button>
-        <button onclick="closeObraResumoModal()" type="button" class="touch-btn px-5 py-3 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-xl text-sm cursor-pointer">
+      <!-- FOOTER FIXO -->
+      <div class="flex flex-wrap gap-2 p-5 pt-4 border-t border-slate-800 flex-shrink-0">
+        <button onclick="closeObraResumoModal()" type="button"
+          class="touch-btn px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm cursor-pointer">
           Fechar
         </button>
+        <button onclick="editarObraAtiva()" type="button"
+          class="touch-btn px-4 py-2.5 bg-brand-orange/20 hover:bg-brand-orange text-brand-orange hover:text-white border border-brand-orange/50 font-bold rounded-xl text-sm cursor-pointer flex items-center gap-2">
+          <i data-lucide="edit-3" class="w-4 h-4"></i>
+          <span>Editar Obra</span>
+        </button>
+        <button onclick="copiarMsgObraResumo()" type="button"
+          class="touch-btn flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2 border border-slate-600">
+          <i data-lucide="clipboard-copy" class="w-4 h-4 text-cyan-400"></i>
+          <span>Copiar</span>
+        </button>
+        <button onclick="enviarMsgObraResumo()" type="button"
+          class="touch-btn flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-black rounded-xl text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg">
+          <i data-lucide="send" class="w-4 h-4"></i>
+          <span>Enviar WhatsApp</span>
+        </button>
       </div>
+
     </div>
   </div>
 
@@ -1435,7 +1468,7 @@
     <span id="toastMessage" class="text-sm font-bold">Dados salvos com sucesso!</span>
   </div>
 
-  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (VERSÃO ATUALIZADA V6) -->
-  <script src="app.js?v=20260916v6"></script>
+  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (VERSÃO ATUALIZADA V7) -->
+  <script src="app.js?v=20260916v7"></script>
 </body>
 </html>

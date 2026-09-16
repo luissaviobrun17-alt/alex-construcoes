@@ -571,7 +571,11 @@ function toggleObraResumoModal() {
     </div>
   `;
 
-  modal.classList.toggle('hidden');
+  // Limpar o campo de mensagem ao abrir
+  const msgBox = document.getElementById('obraResumoMsgBox');
+  if (msgBox) msgBox.value = '';
+
+  modal.classList.remove('hidden');
   if (window.lucide) lucide.createIcons();
 }
 
@@ -579,6 +583,54 @@ function closeObraResumoModal() {
   const modal = document.getElementById('obraResumoModal');
   if (modal) modal.classList.add('hidden');
 }
+
+// Navega para a aba de edição do cliente e fecha o modal
+function editarObraAtiva() {
+  closeObraResumoModal();
+  // Pequeno delay para garantir que o modal fechou antes de mudar de aba
+  setTimeout(() => {
+    switchTab('cliente');
+    // Rolar até o formulário de edição
+    setTimeout(() => {
+      const form = document.getElementById('clientName');
+      if (form) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        form.focus();
+      }
+    }, 150);
+  }, 80);
+}
+
+// Copia a mensagem personalizada para o clipboard
+function copiarMsgObraResumo() {
+  const msgBox = document.getElementById('obraResumoMsgBox');
+  const text = msgBox ? msgBox.value.trim() : '';
+  if (!text) {
+    showToast('Digite uma mensagem antes de copiar.');
+    return;
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('✅ Mensagem copiada para a área de transferência!');
+  });
+}
+
+// Abre WhatsApp com a mensagem personalizada
+function enviarMsgObraResumo() {
+  const msgBox = document.getElementById('obraResumoMsgBox');
+  const text = msgBox ? msgBox.value.trim() : '';
+  if (!text) {
+    showToast('Digite uma mensagem antes de enviar.');
+    if (msgBox) msgBox.focus();
+    return;
+  }
+  const phone = (appState.client || {}).phone || '';
+  const encoded = encodeURIComponent(text);
+  const url = phone
+    ? `https://api.whatsapp.com/send?phone=${phone}&text=${encoded}`
+    : `https://api.whatsapp.com/send?text=${encoded}`;
+  window.open(url, '_blank');
+}
+
 
 function submitNewClientModal() {
   const name = document.getElementById('modalClientName').value.trim();

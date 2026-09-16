@@ -1,4 +1,4 @@
-const CACHE_NAME = 'alex-construcoes-v6';
+const CACHE_NAME = 'alex-construcoes-v7';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
