@@ -166,14 +166,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   if ('caches' in window) {
     caches.keys().then(keys => {
       keys.forEach(k => {
-        if (k !== 'alex-construcoes-v4') caches.delete(k);
+        if (k !== 'alex-construcoes-v10') caches.delete(k);
       });
     });
   }
 
-  // Registra Service Worker v4 com auto-update
+  // Registra Service Worker v10 com auto-update
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=20260914v4').then(reg => {
+    navigator.serviceWorker.register('sw.js?v=20260916v10').then(reg => {
       reg.update();
     }).catch(() => {});
   }
@@ -187,6 +187,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderClientsList();
   renderCatalogItems();
   populateQuickAreaSelect();
+  renderPresetAlternativesGrid();
+  onPresetPackageChange('reforma_completa');
 
   // Inicializa Slider de Margem com valor persistido
   const savedMargin = appState.budgetSettings.margin || 25;
@@ -1150,76 +1152,373 @@ function applyQuickAreaToSelectedService() {
   }
 }
 
-function applyQuickPresetProjection() {
+// ====================================================================
+// DEFINIÇÃO AMPLA DE ETAPAS & ALTERNATIVAS CONSTRUTIVAS PARA PROJEÇÃO
+// ====================================================================
+const PRESET_ALTERNATIVES_DEF = [
+  {
+    id: 'alt_alvenaria',
+    code: 'CIV-01',
+    title: 'Alvenaria & Paredes',
+    shortDesc: 'Blocos cerâmicos furados 9x19x19cm assentados',
+    unit: 'm²',
+    factor: 0.35,
+    cost: 45.00,
+    price: 68.00,
+    disc: 'Civil',
+    desc: 'Alvenaria de vedação com blocos cerâmicos furados 9x19x19cm, assentados com argamassa mista cimento, cal e areia traço 1:2:8, incluindo amarração, vergas e contravergas nas aberturas.',
+    defaultPackages: ['reforma_completa', 'construcao_zero', 'fechamento_reboco']
+  },
+  {
+    id: 'alt_reboco',
+    code: 'CIV-02',
+    title: 'Reboco Sarrafeado & Emboço',
+    shortDesc: 'Argamassa 1:3 sarrafeada e desempenada',
+    unit: 'm²',
+    factor: 2.0,
+    cost: 28.00,
+    price: 45.00,
+    disc: 'Civil',
+    desc: 'Emboço e reboco paulista com argamassa traço 1:3, sarrafeada com régua de alumínio e desempenada com feltro fino para acabamento plano e prumo perfeito.',
+    defaultPackages: ['reforma_completa', 'construcao_zero', 'fechamento_reboco']
+  },
+  {
+    id: 'alt_contrapiso',
+    code: 'CIV-04',
+    title: 'Contrapiso & Nivelamento',
+    shortDesc: 'Regularização e caimento para ralos',
+    unit: 'm²',
+    factor: 1.0,
+    cost: 24.00,
+    price: 40.00,
+    disc: 'Civil',
+    desc: 'Execução de contrapiso sarrafeado e regularização de base em concreto magro traço 1:4 com caimento adequado para ralos e desníveis técnicos.',
+    defaultPackages: ['reforma_completa', 'construcao_zero', 'pisos_porcelanato']
+  },
+  {
+    id: 'alt_porcelanato',
+    code: 'CIV-03',
+    title: 'Porcelanato & Revestimento',
+    shortDesc: 'Dupla colagem AC-III e niveladores cunha',
+    unit: 'm²',
+    factor: 1.0,
+    cost: 55.00,
+    price: 90.00,
+    disc: 'Civil',
+    desc: 'Assentamento de porcelanato retificado com dupla colagem em argamassa flexível AC-III, niveladores tipo cunha e rejunte resinado antifungos.',
+    defaultPackages: ['reforma_completa', 'construcao_zero', 'pisos_porcelanato', 'area_gourmet']
+  },
+  {
+    id: 'alt_revest_parede',
+    code: 'CIV-05',
+    title: 'Azulejo / Parede Molhada',
+    shortDesc: 'Revestimento cerâmico cozinha e banheiros',
+    unit: 'm²',
+    factor: 0.45,
+    cost: 48.00,
+    price: 80.00,
+    disc: 'Civil',
+    desc: 'Revestimento cerâmico em paredes de cozinhas, banheiros e lavabos com argamassa AC-II/AC-III e rejuntamento resistente à umidade.',
+    defaultPackages: ['reforma_completa', 'construcao_zero', 'pisos_porcelanato', 'area_gourmet']
+  },
+  {
+    id: 'alt_pintura_int',
+    code: 'PIN-01',
+    title: 'Pintura Interna Fina',
+    shortDesc: 'Emassamento 2 demãos + Tinta acrílica fosca',
+    unit: 'm²',
+    factor: 2.5,
+    cost: 22.00,
+    price: 38.00,
+    disc: 'Pintura',
+    desc: 'Preparo de base com selador, lixamento orbital, 2 demãos de massa corrida/acrílica e 2 a 3 demãos de tinta acrílica premium fosca lavável.',
+    defaultPackages: ['reforma_completa', 'construcao_zero', 'pintura_fina', 'textura_fachada', 'gesso_drywall', 'area_gourmet']
+  },
+  {
+    id: 'alt_textura_ext',
+    code: 'PIN-02',
+    title: 'Textura Externa & Grafiato',
+    shortDesc: 'Fachadas, muros e beirais impermeabilizados',
+    unit: 'm²',
+    factor: 1.2,
+    cost: 26.00,
+    price: 46.00,
+    disc: 'Pintura',
+    desc: 'Aplicação de fundo preparador e revestimento hidro-repelente grafiato ou textura projetada em áreas externas, fachadas e platibandas.',
+    defaultPackages: ['construcao_zero', 'textura_fachada']
+  },
+  {
+    id: 'alt_eletrica_pontos',
+    code: 'ELE-01',
+    title: 'Pontos Elétricos / Tomadas',
+    shortDesc: 'Eletroduto, fiação antichama 2,5mm² e espelhos',
+    unit: 'un',
+    factor: (a) => Math.max(6, Math.ceil(a / 5)),
+    cost: 40.00,
+    price: 75.00,
+    disc: 'Elétrica',
+    desc: 'Ponto de energia embutido com eletroduto reforçado, fiação de cobre antichama 2,5mm², caixa 4x2 e acabamento com módulo/espelho de primeira linha.',
+    defaultPackages: ['reforma_completa', 'construcao_zero', 'eletrica_hidraulica', 'area_gourmet']
+  },
+  {
+    id: 'alt_eletrica_qdc',
+    code: 'ELE-02',
+    title: 'Quadro QDC com DPS e DR',
+    shortDesc: 'Quadro até 16 circuitos com disjuntores',
+    unit: 'un',
+    factor: 1,
+    cost: 280.00,
+    price: 500.00,
+    disc: 'Elétrica',
+    desc: 'Montagem de QDC para até 16 circuitos com Disjuntor Geral, barramentos tipo pente, DPS Classe II contra surtos e DR de proteção contra choque elétrico de 30mA.',
+    defaultPackages: ['reforma_completa', 'construcao_zero', 'eletrica_hidraulica']
+  },
+  {
+    id: 'alt_hidraulica',
+    code: 'HID-01',
+    title: 'Hidráulica & Esgoto',
+    shortDesc: 'PPR termofundido/PVC com fecho hídrico',
+    unit: 'un',
+    factor: (a) => Math.max(3, Math.ceil(a / 12)),
+    cost: 95.00,
+    price: 165.00,
+    disc: 'Hidráulica',
+    desc: 'Instalação de ramal de água fria em PPR termofundido ou PVC soldável, e derivação para esgoto com fecho hídrico sifonado de PVC ponta e bolsa conforme NBR 5626.',
+    defaultPackages: ['reforma_completa', 'construcao_zero', 'eletrica_hidraulica', 'area_gourmet']
+  },
+  {
+    id: 'alt_gesso',
+    code: 'GES-01',
+    title: 'Forro de Gesso (Drywall)',
+    shortDesc: 'Rebaixo estruturado F530 com tabica',
+    unit: 'm²',
+    factor: 0.85,
+    cost: 38.00,
+    price: 65.00,
+    disc: 'Gesso',
+    desc: 'Forro de gesso acartonado estruturado em perfis de aço galvanizado F530, tirantes, tabica perimetral e tratamento de juntas com fita e massa específica.',
+    defaultPackages: ['reforma_completa', 'construcao_zero', 'gesso_drywall']
+  },
+  {
+    id: 'alt_impermeab',
+    code: 'IMP-01',
+    title: 'Impermeabilização Técnica',
+    shortDesc: 'Baldrames, lajes e box com manta/membrana',
+    unit: 'm²',
+    factor: 0.3,
+    cost: 32.00,
+    price: 58.00,
+    disc: 'Civil',
+    desc: 'Impermeabilização rígida e flexível com argamassa polimérica e manta asfáltica em rodapés, áreas molhadas e lajes expostas com teste de estanqueidade de 72h.',
+    defaultPackages: ['construcao_zero', 'fechamento_reboco', 'impermeabilizacao']
+  },
+  {
+    id: 'alt_demolicao',
+    code: 'DEM-01',
+    title: 'Demolição & Caçambas',
+    shortDesc: 'Quebra cautelosa e bota-fora de entulho',
+    unit: 'm²',
+    factor: 0.4,
+    cost: 22.00,
+    price: 38.00,
+    disc: 'Civil',
+    desc: 'Demolição mecânica e manual de alvenaria e pisos velhos, ensacamento e destinação ambiental de resíduos em caçambas estacionárias licenciadas.',
+    defaultPackages: ['demolicao_botafora']
+  },
+  {
+    id: 'alt_portas',
+    code: 'ESQ-01',
+    title: 'Portas & Esquadrias',
+    shortDesc: 'Montagem de batentes, folhas e fechaduras',
+    unit: 'un',
+    factor: (a) => Math.max(2, Math.ceil(a / 18)),
+    cost: 70.00,
+    price: 130.00,
+    disc: 'Civil',
+    desc: 'Fixação de marcos/batentes com espuma expansiva de poliuretano, prumo, colocação de portas de madeira frisada, fechaduras e guarnições/alizares.',
+    defaultPackages: ['construcao_zero']
+  },
+  {
+    id: 'alt_gourmet',
+    code: 'BNC-01',
+    title: 'Bancadas em Granito & Gourmet',
+    shortDesc: 'Cozinha, churrasqueira e cubas instaladas',
+    unit: 'm',
+    factor: (a) => Math.max(2, Math.ceil(a / 25)),
+    cost: 180.00,
+    price: 320.00,
+    disc: 'Civil',
+    desc: 'Fornecimento e assentamento de bancadas em granito São Gabriel ou Verde Ubatuba com saia de 4cm, frontispício de 10cm, cuba inox e silicone estrutural.',
+    defaultPackages: ['area_gourmet', 'construcao_zero']
+  },
+  {
+    id: 'alt_limpeza',
+    code: 'LMP-01',
+    title: 'Limpeza Pós-Obra Fina',
+    shortDesc: 'Remoção química e desinfecção para entrega',
+    unit: 'm²',
+    factor: 1.0,
+    cost: 8.00,
+    price: 16.00,
+    disc: 'Civil',
+    desc: 'Limpeza técnica pós-obra completa com removedores específicos, aspiração de dutos, lavagem de pisos/vidros e entrega em padrão vistoria impecável.',
+    defaultPackages: ['reforma_completa', 'construcao_zero', 'demolicao_botafora']
+  }
+];
+
+function renderPresetAlternativesGrid() {
+  const container = document.getElementById('presetAlternativesGrid');
+  if (!container) return;
+
+  container.innerHTML = PRESET_ALTERNATIVES_DEF.map(alt => `
+    <label class="flex items-start gap-2.5 bg-slate-900/90 border border-slate-800 hover:border-brand-orange/60 p-2.5 sm:p-3 rounded-xl cursor-pointer transition select-none group">
+      <input type="checkbox" id="${alt.id}" class="preset-alt-checkbox w-4 h-4 mt-0.5 accent-brand-orange rounded cursor-pointer flex-shrink-0"
+             onchange="onPresetAlternativeToggle()">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-1">
+          <span class="text-xs font-bold text-white group-hover:text-brand-orange transition truncate">${alt.title}</span>
+          <span class="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded flex-shrink-0">${alt.code}</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-tight mt-0.5 truncate">${alt.shortDesc}</p>
+        <span class="text-[10px] text-emerald-400 font-bold mt-1 block">R$ ${alt.price.toFixed(2).replace('.', ',')} / ${alt.unit}</span>
+      </div>
+    </label>
+  `).join('');
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function onPresetPackageChange(pkg) {
+  PRESET_ALTERNATIVES_DEF.forEach(alt => {
+    const cb = document.getElementById(alt.id);
+    if (!cb) return;
+    if (pkg === 'personalizado') {
+      // Mantém seleção atual do usuário
+    } else if (pkg === 'construcao_zero') {
+      cb.checked = true;
+    } else {
+      cb.checked = alt.defaultPackages.includes(pkg);
+    }
+  });
+}
+
+function onPresetAlternativeToggle() {
+  // Chamado quando o usuário marca/desmarca uma alternativa manualmente
+}
+
+function selectAllPresetAlternatives(select) {
+  document.querySelectorAll('.preset-alt-checkbox').forEach(cb => {
+    cb.checked = !!select;
+  });
   const pkgSelect = document.getElementById('presetPackageSelect');
+  if (pkgSelect) pkgSelect.value = select ? 'construcao_zero' : 'personalizado';
+}
+
+function applyQuickPresetProjection() {
   const areaInput = document.getElementById('presetAreaInput');
-  const pkg = pkgSelect ? pkgSelect.value : "reforma_completa";
   const area = parseFloat(areaInput ? areaInput.value : 50) || 50;
 
   if (area <= 0) {
     alert("Por favor, insira uma metragem válida maior que zero.");
+    if (areaInput) areaInput.focus();
     return;
   }
 
-  // Zera quantidades antes de aplicar projeção
-  appState.catalog.forEach(item => {
-    item.quantity = 0;
+  // Zera quantidades dos itens do catálogo pertencentes às alternativas para recalcular
+  PRESET_ALTERNATIVES_DEF.forEach(alt => {
+    const existing = (appState.catalog || []).find(i => i.code === alt.code);
+    if (existing) existing.quantity = 0;
   });
 
-  if (pkg === "reforma_completa") {
-    // Proporções politécnicas Alex Construções para reforma completa:
-    const civ03 = appState.catalog.find(i => i.code === 'CIV-03');
-    if (civ03) civ03.quantity = parseFloat(area.toFixed(2));
+  let activeCount = 0;
 
-    const civ01 = appState.catalog.find(i => i.code === 'CIV-01');
-    if (civ01) civ01.quantity = parseFloat((area * 0.35).toFixed(2));
+  // Aplica as alternativas selecionadas com base na área
+  PRESET_ALTERNATIVES_DEF.forEach(alt => {
+    const cb = document.getElementById(alt.id);
+    if (cb && cb.checked) {
+      let qty = 0;
+      if (typeof alt.factor === 'function') {
+        qty = alt.factor(area);
+      } else {
+        qty = parseFloat((area * alt.factor).toFixed(2));
+      }
 
-    const civ02 = appState.catalog.find(i => i.code === 'CIV-02');
-    if (civ02) civ02.quantity = parseFloat((area * 2.2).toFixed(2));
+      let existing = (appState.catalog || []).find(i => i.code === alt.code);
+      if (existing) {
+        existing.quantity = qty;
+      } else {
+        if (!appState.catalog) appState.catalog = [];
+        appState.catalog.push({
+          code: alt.code,
+          discipline: alt.disc,
+          name: alt.title,
+          unit: alt.unit,
+          directCost: alt.cost,
+          suggestedPrice: alt.price,
+          quantity: qty,
+          description: alt.desc
+        });
+      }
+      activeCount++;
+    }
+  });
 
-    const pin01 = appState.catalog.find(i => i.code === 'PIN-01');
-    if (pin01) pin01.quantity = parseFloat((area * 2.5).toFixed(2));
+  // AFAZERES ESPECÍFICOS & SERVIÇOS SOB MEDIDA DA OBRA
+  const customNotesInput = document.getElementById('presetCustomNotes');
+  const customNotes = customNotesInput ? customNotesInput.value.trim() : "";
+  const customPriceInput = document.getElementById('presetCustomPrice');
+  const customPrice = parseFloat(customPriceInput ? customPriceInput.value : 0) || 0;
 
-    const ele01 = appState.catalog.find(i => i.code === 'ELE-01');
-    if (ele01) ele01.quantity = Math.max(4, Math.ceil(area / 6));
+  if (customNotes) {
+    let customItem = (appState.catalog || []).find(i => i.code === 'ESP-01');
+    const priceToUse = customPrice > 0 ? customPrice : 1200.00;
+    const directCost = Math.round(priceToUse * 0.65 * 100) / 100;
+    const shortName = customNotes.length > 55 ? customNotes.substring(0, 52) + '...' : customNotes;
 
-    const ele02 = appState.catalog.find(i => i.code === 'ELE-02');
-    if (ele02) ele02.quantity = 1;
+    if (customItem) {
+      customItem.name = "Afazeres Específicos: " + shortName;
+      customItem.description = customNotes;
+      customItem.suggestedPrice = priceToUse;
+      customItem.directCost = directCost;
+      customItem.quantity = 1;
+    } else {
+      if (!appState.catalog) appState.catalog = [];
+      appState.catalog.push({
+        code: 'ESP-01',
+        discipline: 'Específico',
+        name: 'Afazeres Específicos: ' + shortName,
+        unit: 'vb',
+        directCost: directCost,
+        suggestedPrice: priceToUse,
+        quantity: 1,
+        description: customNotes
+      });
+    }
 
-    const hid01 = appState.catalog.find(i => i.code === 'HID-01');
-    if (hid01) hid01.quantity = Math.max(2, Math.ceil(area / 15));
-
-  } else if (pkg === "fechamento_reboco") {
-    const civ01 = appState.catalog.find(i => i.code === 'CIV-01');
-    if (civ01) civ01.quantity = parseFloat(area.toFixed(2));
-
-    const civ02 = appState.catalog.find(i => i.code === 'CIV-02');
-    if (civ02) civ02.quantity = parseFloat((area * 2.0).toFixed(2));
-
-  } else if (pkg === "pisos_porcelanato") {
-    const civ03 = appState.catalog.find(i => i.code === 'CIV-03');
-    if (civ03) civ03.quantity = parseFloat(area.toFixed(2));
-
-  } else if (pkg === "pintura_fina") {
-    const pin01 = appState.catalog.find(i => i.code === 'PIN-01');
-    if (pin01) pin01.quantity = parseFloat((area * 2.5).toFixed(2));
-
-  } else if (pkg === "eletrica_hidraulica") {
-    const ele01 = appState.catalog.find(i => i.code === 'ELE-01');
-    if (ele01) ele01.quantity = Math.max(6, Math.ceil(area / 4));
-
-    const ele02 = appState.catalog.find(i => i.code === 'ELE-02');
-    if (ele02) ele02.quantity = 1;
-
-    const hid01 = appState.catalog.find(i => i.code === 'HID-01');
-    if (hid01) hid01.quantity = Math.max(2, Math.ceil(area / 10));
+    if (appState.client) {
+      appState.client.notes = (appState.client.notes ? appState.client.notes + " | " : "") + customNotes;
+    }
+  } else {
+    const customItem = (appState.catalog || []).find(i => i.code === 'ESP-01');
+    if (customItem) customItem.quantity = 0;
   }
 
   renderCatalogItems();
+  populateQuickAreaSelect();
   recalculateBudget();
+  updateMemorialContent();
+  updateContractDocument();
   saveAllData(true);
 
-  showToast(`⚡ Projeção de obra calculada para ${area} m² com sucesso!`);
+  const extrasMsg = customNotes ? " + Afazeres Específicos inclusos" : "";
+  showToast(`⚡ Projeção gerada para ${area} m² com sucesso (${activeCount} etapas${extrasMsg})!`);
+
+  setTimeout(() => {
+    const catalogHeader = document.getElementById('catalogItemsContainer');
+    if (catalogHeader) {
+      catalogHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 250);
 }
 
 function renderCatalogItems() {
