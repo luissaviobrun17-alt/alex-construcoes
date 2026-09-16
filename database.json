@@ -5,6 +5,7 @@
     "phone": "65992330997",
     "address": "Rua Quarenta e Cinco",
     "cpf": "",
+    "email": "",
     "startDate": "2026-09-16",
     "notes": "150"
   },
@@ -128,7 +129,7 @@
     "signatureBase64": "",
     "clientSigned": false
   },
-  "lastModified": 1789565872996,
+  "lastModified": 1789570479952,
   "activeClientId": "CLI-1789564753895",
   "clients": [
     {
@@ -137,6 +138,7 @@
       "phone": "65992330997",
       "address": "Rua Quarenta e Cinco",
       "cpf": "",
+      "email": "",
       "startDate": "2026-09-16",
       "notes": "150"
     },

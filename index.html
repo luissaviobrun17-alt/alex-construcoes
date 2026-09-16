@@ -1201,47 +1201,46 @@
   <!-- MODAL: RESUMO RÁPIDO DA OBRA ATIVA                              -->
   <!-- ================================================================ -->
   <div id="obraResumoModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4" onclick="if(event.target===this)closeObraResumoModal()">
-    <div class="bg-slate-900 border-2 border-emerald-700 rounded-3xl w-full max-w-lg shadow-2xl relative flex flex-col max-h-[92vh]">
+    <div class="bg-slate-900 border-2 border-emerald-700 rounded-3xl w-full max-w-lg shadow-2xl relative flex flex-col" style="max-height:92vh">
 
-      <!-- HEADER -->
-      <div class="flex items-center justify-between p-5 pb-4 border-b border-slate-800 flex-shrink-0">
+      <!-- HEADER FIXO -->
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800 flex-shrink-0">
         <div class="flex items-center space-x-3">
-          <div class="p-3 bg-emerald-950 text-emerald-400 rounded-xl border border-emerald-800">
-            <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+          <div class="p-2.5 bg-emerald-950 text-emerald-400 rounded-xl border border-emerald-800">
+            <i data-lucide="clipboard-list" class="w-5 h-5"></i>
           </div>
           <div>
-            <h3 class="text-lg sm:text-xl font-black text-white">RESUMO DA OBRA ATIVA</h3>
-            <p class="text-xs text-slate-400">Dados consolidados do projeto em edição</p>
+            <h3 class="text-base sm:text-lg font-black text-white">RESUMO DA OBRA ATIVA</h3>
+            <p class="text-xs text-slate-400">Clique em Editar Obra para alterar os dados</p>
           </div>
         </div>
         <button onclick="closeObraResumoModal()" type="button" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition cursor-pointer">
-          <i data-lucide="x" class="w-6 h-6"></i>
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <!-- BODY SCROLLÁVEL -->
-      <div class="overflow-y-auto flex-1 p-5 space-y-4">
-
-        <!-- Dados da obra -->
+      <!-- DADOS DA OBRA — rolável, altura limitada -->
+      <div class="overflow-y-auto px-5 pt-4 pb-2 flex-shrink-0" style="max-height:36vh">
         <div class="space-y-2" id="obraResumoContent">
-          <!-- Preenchido dinamicamente por toggleObraResumoModal() -->
-        </div>
-
-        <!-- DIVISOR -->
-        <div class="border-t border-slate-800 pt-4">
-          <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <i data-lucide="message-square-text" class="w-4 h-4"></i>
-            Mensagem Personalizada para o Cliente
-          </h4>
-          <p class="text-xs text-slate-500 mb-2">Escreva qualquer recado, instrução ou comunicado e envie diretamente pelo WhatsApp.</p>
-          <textarea id="obraResumoMsgBox" rows="5"
-            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white font-mono leading-relaxed focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none resize-y"
-            placeholder="Ex: Olá! Passando para informar que iniciaremos a obra na próxima segunda-feira. Qualquer dúvida, estamos à disposição! 🛠️"></textarea>
+          <!-- Preenchido dinamicamente -->
         </div>
       </div>
 
+      <!-- DIVISOR + TEXTAREA — sempre visível -->
+      <div class="flex-1 px-5 pb-3 pt-3 border-t border-slate-800 flex flex-col gap-2 overflow-hidden">
+        <div class="flex items-center gap-2">
+          <i data-lucide="message-square-text" class="w-4 h-4 text-emerald-400 flex-shrink-0"></i>
+          <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Mensagem para o Cliente</span>
+        </div>
+        <p class="text-xs text-slate-500">Escreva um recado e envie direto pelo WhatsApp do cliente cadastrado.</p>
+        <textarea id="obraResumoMsgBox"
+          class="flex-1 w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white leading-relaxed focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none resize-none"
+          placeholder="Ex: Olá! Passando para confirmar que iniciaremos a obra na próxima segunda-feira. Qualquer dúvida, estamos à disposição! 🛠️"
+          style="min-height:100px"></textarea>
+      </div>
+
       <!-- FOOTER FIXO -->
-      <div class="flex flex-wrap gap-2 p-5 pt-4 border-t border-slate-800 flex-shrink-0">
+      <div class="flex flex-wrap gap-2 px-5 py-4 border-t border-slate-800 flex-shrink-0">
         <button onclick="closeObraResumoModal()" type="button"
           class="touch-btn px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm cursor-pointer">
           Fechar
@@ -1468,7 +1467,7 @@
     <span id="toastMessage" class="text-sm font-bold">Dados salvos com sucesso!</span>
   </div>
 
-  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (VERSÃO ATUALIZADA V7) -->
-  <script src="app.js?v=20260916v7"></script>
+  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (VERSÃO ATUALIZADA V8) -->
+  <script src="app.js?v=20260916v8"></script>
 </body>
 </html>
