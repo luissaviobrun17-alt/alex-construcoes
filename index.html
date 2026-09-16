@@ -289,7 +289,7 @@
               <i data-lucide="user-plus" class="w-4 h-4"></i>
               <span>+ Novo Cliente</span>
             </button>
-            <span class="px-3 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-black rounded-lg uppercase">Obra em Edição</span>
+            <span class="px-3 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-black rounded-lg uppercase cursor-pointer hover:bg-emerald-900 transition" onclick="toggleObraResumoModal()" title="Ver resumo da obra">🔍 Obra em Edição</span>
           </div>
         </div>
 
@@ -315,6 +315,14 @@
           <div>
             <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">CPF ou CNPJ do Contratante</label>
             <input type="text" id="clientCpf" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3.5 text-white font-medium focus:border-brand-orange focus:ring-1 focus:ring-brand-orange outline-none" placeholder="123.456.789-00">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">E-mail do Cliente</label>
+            <div class="relative">
+              <input type="email" id="clientEmail" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3.5 pl-12 text-white font-medium focus:border-brand-orange focus:ring-1 focus:ring-brand-orange outline-none" placeholder="cliente@email.com">
+              <i data-lucide="mail" class="w-5 h-5 text-cyan-400 absolute left-4 top-4"></i>
+            </div>
           </div>
 
           <div>
@@ -1077,6 +1085,42 @@
   </main>
 
   <!-- ================================================================ -->
+  <!-- MODAL: RESUMO RÁPIDO DA OBRA ATIVA                              -->
+  <!-- ================================================================ -->
+  <div id="obraResumoModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4" onclick="if(event.target===this)closeObraResumoModal()">
+    <div class="bg-slate-900 border-2 border-emerald-700 rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-5">
+        <div class="flex items-center space-x-3">
+          <div class="p-3 bg-emerald-950 text-emerald-400 rounded-xl border border-emerald-800">
+            <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h3 class="text-lg sm:text-xl font-black text-white">RESUMO DA OBRA ATIVA</h3>
+            <p class="text-xs text-slate-400">Dados consolidados do projeto em edição</p>
+          </div>
+        </div>
+        <button onclick="closeObraResumoModal()" type="button" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition cursor-pointer">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3" id="obraResumoContent">
+        <!-- Preenchido dinamicamente por toggleObraResumoModal() -->
+      </div>
+
+      <div class="mt-6 flex gap-3 justify-end pt-4 border-t border-slate-800">
+        <button onclick="closeObraResumoModal(); switchTab('cliente')" type="button" class="touch-btn px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm cursor-pointer flex items-center space-x-2">
+          <i data-lucide="edit-3" class="w-4 h-4 text-brand-orange"></i>
+          <span>Editar Obra</span>
+        </button>
+        <button onclick="closeObraResumoModal()" type="button" class="touch-btn px-5 py-3 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-xl text-sm cursor-pointer">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
   <!-- MODAL: CADASTRAR NOVO CLIENTE / NOVA OBRA                        -->
   <!-- ================================================================ -->
   <div id="newClientModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
@@ -1120,6 +1164,16 @@
               CPF ou CNPJ
             </label>
             <input type="text" id="modalClientCpf" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium focus:border-brand-orange outline-none" placeholder="000.000.000-00">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+            E-mail do Cliente
+          </label>
+          <div class="relative">
+            <input type="email" id="modalClientEmail" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 pl-11 text-white font-medium focus:border-brand-orange outline-none" placeholder="cliente@email.com">
+            <i data-lucide="mail" class="w-4 h-4 text-cyan-400 absolute left-3.5 top-3.5"></i>
           </div>
         </div>
 
@@ -1268,7 +1322,7 @@
     <span id="toastMessage" class="text-sm font-bold">Dados salvos com sucesso!</span>
   </div>
 
-  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (VERSÃO ATUALIZADA V4) -->
-  <script src="app.js?v=20260914v4"></script>
+  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (VERSÃO ATUALIZADA V5) -->
+  <script src="app.js?v=20260916v5"></script>
 </body>
 </html>

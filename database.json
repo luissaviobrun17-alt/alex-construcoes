@@ -1,15 +1,16 @@
 {
   "client": {
-    "name": "Luis Savio Brun",
-    "phone": "5511998877665",
-    "address": "Av. Paulista, 1000 - Canteiro Central",
-    "cpf": "123.456.789-00",
-    "startDate": "2026-09-25",
-    "notes": "Reforma completa e instalações técnicas Alex Construções"
+    "id": "CLI-1789564753895",
+    "name": "LUIS SAVIO BRUN",
+    "phone": "65992330997",
+    "address": "Rua Quarenta e Cinco",
+    "cpf": "",
+    "startDate": "2026-09-16",
+    "notes": "150"
   },
   "budgetSettings": {
     "bdi": 15,
-    "margin": 15
+    "margin": 22
   },
   "catalog": [
     {
@@ -19,7 +20,7 @@
       "unit": "m²",
       "directCost": 45,
       "suggestedPrice": 68,
-      "quantity": 31,
+      "quantity": 15,
       "description": "Execução de alvenaria de vedação com blocos cerâmicos furados 9x19x19cm, assentados com argamassa mista de cimento, cal e areia traço 1:2:8, incluindo amarração, vergas e contravergas nas aberturas."
     },
     {
@@ -29,7 +30,7 @@
       "unit": "m²",
       "directCost": 28,
       "suggestedPrice": 45,
-      "quantity": 57,
+      "quantity": 10,
       "description": "Aplicação de emboço/reboco paulista com argamassa usinada ou preparada em obra traço 1:3, sarrafeado e desempenado com feltro para acabamento regular."
     },
     {
@@ -39,7 +40,7 @@
       "unit": "m²",
       "directCost": 55,
       "suggestedPrice": 90,
-      "quantity": 42,
+      "quantity": 0,
       "description": "Assentamento de revestimento porcelanato retificado com dupla colagem em argamassa AC-III flexível, niveladores de piso tipo cunha e rejuntamento fino resinado."
     },
     {
@@ -49,7 +50,7 @@
       "unit": "un",
       "directCost": 40,
       "suggestedPrice": 75,
-      "quantity": 18,
+      "quantity": 0,
       "description": "Instalação de ponto elétrico embutido em alvenaria com eletroduto corrugado reforçado, fiação antichama de cobre 2,5mm², caixa 4x2 e acabamento com módulo/espelho."
     },
     {
@@ -59,7 +60,7 @@
       "unit": "un",
       "directCost": 280,
       "suggestedPrice": 500,
-      "quantity": 1,
+      "quantity": 0,
       "description": "Fornecimento e montagem técnica de quadro de distribuição de embutir até 16 disjuntores, com Disjuntor Geral Bipolar, DPS classe II, DR tetrapolar/bipolar de alta sensibilidade 30mA e barramentos tipo pente."
     },
     {
@@ -69,7 +70,7 @@
       "unit": "un",
       "directCost": 95,
       "suggestedPrice": 165,
-      "quantity": 6,
+      "quantity": 0,
       "description": "Instalação de ponto hidráulico de alimentação predial em tubulação termofusão PPR ou PVC roscável/soldável com conexões, e derivação para esgoto com fecho hídrico sifonado de PVC ponta e bolsa."
     },
     {
@@ -79,7 +80,7 @@
       "unit": "m²",
       "directCost": 22,
       "suggestedPrice": 38,
-      "quantity": 110,
+      "quantity": 25,
       "description": "Preparo de superfícies com fundo preparador, lixamento fino, aplicação de duas demãos de massa corrida/acrílica e pintura final com 2 a 3 demãos de tinta acrílica premium acabamento fosco lavável."
     },
     {
@@ -89,7 +90,7 @@
       "unit": "m²",
       "directCost": 100,
       "suggestedPrice": 150,
-      "quantity": 1200,
+      "quantity": 0,
       "description": "trocar a fiação completa da cozinha"
     }
   ],
@@ -127,17 +128,17 @@
     "signatureBase64": "",
     "clientSigned": false
   },
-  "lastModified": 1789421917982,
-  "activeClientId": "CLI-1",
+  "lastModified": 1789565872996,
+  "activeClientId": "CLI-1789564753895",
   "clients": [
     {
-      "id": "CLI-1",
-      "name": "Luis Savio Brun",
-      "phone": "5511998877665",
-      "address": "Av. Paulista, 1000 - Canteiro Central",
-      "cpf": "123.456.789-00",
-      "startDate": "2026-09-25",
-      "notes": "Reforma completa e instalações técnicas Alex Construções"
+      "id": "CLI-1789564753895",
+      "name": "LUIS SAVIO BRUN",
+      "phone": "65992330997",
+      "address": "Rua Quarenta e Cinco",
+      "cpf": "",
+      "startDate": "2026-09-16",
+      "notes": "150"
     },
     {
       "id": "CLI-2",

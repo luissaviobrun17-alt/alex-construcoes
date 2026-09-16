@@ -407,6 +407,7 @@ function populateClientForm() {
   const phoneInput = document.getElementById('clientPhone');
   const addrInput = document.getElementById('clientAddress');
   const cpfInput = document.getElementById('clientCpf');
+  const emailInput = document.getElementById('clientEmail');
   const startInput = document.getElementById('clientStartDate');
   const notesInput = document.getElementById('clientNotes');
   const headerName = document.getElementById('activeClientNameHeader');
@@ -415,6 +416,7 @@ function populateClientForm() {
   if (phoneInput) phoneInput.value = c.phone || "";
   if (addrInput) addrInput.value = c.address || "";
   if (cpfInput) cpfInput.value = c.cpf || "";
+  if (emailInput) emailInput.value = c.email || "";
   if (startInput) startInput.value = c.startDate || "";
   if (notesInput) notesInput.value = c.notes || "";
   if (headerName) headerName.innerText = c.name ? c.name : "Novo Cliente";
@@ -512,6 +514,8 @@ function openNewClientModal() {
   document.getElementById('modalClientPhone').value = "";
   document.getElementById('modalClientAddress').value = "";
   document.getElementById('modalClientCpf').value = "";
+  const modalEmail = document.getElementById('modalClientEmail');
+  if (modalEmail) modalEmail.value = "";
   document.getElementById('modalClientStartDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('modalClientNotes').value = "";
 
@@ -527,6 +531,55 @@ function closeNewClientModal() {
   if (modal) modal.classList.add('hidden');
 }
 
+// ─── MODAL RESUMO RÁPIDO DA OBRA ATIVA ───────────────────────────────────────
+function toggleObraResumoModal() {
+  const modal = document.getElementById('obraResumoModal');
+  if (!modal) return;
+
+  const c = appState.client || {};
+  const total = calculateTotalSalePrice ? calculateTotalSalePrice() : 0;
+
+  function row(icon, label, value) {
+    if (!value) return '';
+    return `<div class="flex items-start gap-3 bg-slate-800/60 rounded-xl px-4 py-3 border border-slate-700">
+      <span class="text-brand-orange mt-0.5 flex-shrink-0">${icon}</span>
+      <div>
+        <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">${label}</p>
+        <p class="text-sm text-white font-semibold mt-0.5">${value}</p>
+      </div>
+    </div>`;
+  }
+
+  const phone = c.phone ? c.phone.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3') : null;
+  const startFormatted = c.startDate ? new Date(c.startDate + 'T12:00:00').toLocaleDateString('pt-BR') : null;
+  const totalFormatted = total > 0 ? `R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'Orçamento em elaboração';
+
+  document.getElementById('obraResumoContent').innerHTML = `
+    ${row('👤', 'Cliente', c.name || 'Não informado')}
+    ${row('📍', 'Endereço da Obra', c.address)}
+    ${row('📞', 'WhatsApp', phone)}
+    ${row('📧', 'E-mail', c.email)}
+    ${row('🪪', 'CPF / CNPJ', c.cpf)}
+    ${row('📅', 'Início Previsto', startFormatted)}
+    ${row('📋', 'Escopo', c.notes)}
+    <div class="flex items-start gap-3 bg-brand-orange/10 rounded-xl px-4 py-3 border border-brand-orange/40">
+      <span class="text-brand-orange mt-0.5 flex-shrink-0">💰</span>
+      <div>
+        <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">Valor Total do Orçamento</p>
+        <p class="text-base text-brand-orange font-black mt-0.5">${totalFormatted}</p>
+      </div>
+    </div>
+  `;
+
+  modal.classList.toggle('hidden');
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeObraResumoModal() {
+  const modal = document.getElementById('obraResumoModal');
+  if (modal) modal.classList.add('hidden');
+}
+
 function submitNewClientModal() {
   const name = document.getElementById('modalClientName').value.trim();
   if (!name) {
@@ -538,6 +591,7 @@ function submitNewClientModal() {
   const phone = document.getElementById('modalClientPhone').value.trim();
   const address = document.getElementById('modalClientAddress').value.trim();
   const cpf = document.getElementById('modalClientCpf').value.trim();
+  const email = document.getElementById('modalClientEmail') ? document.getElementById('modalClientEmail').value.trim() : "";
   const startDate = document.getElementById('modalClientStartDate').value;
   const notes = document.getElementById('modalClientNotes').value.trim();
 
@@ -548,6 +602,7 @@ function submitNewClientModal() {
     phone: phone.replace(/\D/g, ''),
     address: address || "Endereço em levantamento",
     cpf: cpf,
+    email: email,
     startDate: startDate,
     notes: notes || "Nova obra cadastrada no Sistema Alex Construções"
   };
@@ -628,6 +683,8 @@ function clearClientForm() {
   document.getElementById('clientPhone').value = "";
   document.getElementById('clientAddress').value = "";
   document.getElementById('clientCpf').value = "";
+  const emailInput = document.getElementById('clientEmail');
+  if (emailInput) emailInput.value = "";
   document.getElementById('clientStartDate').value = "";
   document.getElementById('clientNotes').value = "";
   const headerName = document.getElementById('activeClientNameHeader');
@@ -650,6 +707,7 @@ function saveClientData() {
     phone: document.getElementById('clientPhone').value.replace(/\D/g, ''),
     address: document.getElementById('clientAddress').value.trim(),
     cpf: document.getElementById('clientCpf').value.trim(),
+    email: document.getElementById('clientEmail') ? document.getElementById('clientEmail').value.trim() : "",
     startDate: document.getElementById('clientStartDate').value,
     notes: document.getElementById('clientNotes').value.trim()
   };
