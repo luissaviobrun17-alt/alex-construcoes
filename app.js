@@ -974,7 +974,11 @@ function calcQuickArea() {
   const l = parseFloat(document.getElementById('quickLength').value) || 0;
   const w = parseFloat(document.getElementById('quickWidth').value) || 0;
   const area = l * w;
-  document.getElementById('quickAreaResult').innerText = area.toFixed(2).replace('.', ',') + " m²";
+  const formatted = area.toFixed(2).replace('.', ',') + " m²";
+  const resultEl = document.getElementById('quickAreaResult');
+  if (resultEl) resultEl.innerText = formatted;
+  const badgeEl = document.getElementById('quickServiceAreaBadge');
+  if (badgeEl) badgeEl.innerText = formatted;
 }
 
 function populateQuickAreaSelect() {
@@ -990,6 +994,135 @@ function populateQuickAreaSelect() {
     }
     select.appendChild(opt);
   });
+}
+
+function toggleQuickServiceInput() {
+  const l = parseFloat(document.getElementById('quickLength').value) || 0;
+  const w = parseFloat(document.getElementById('quickWidth').value) || 0;
+  const area = l * w;
+
+  if (area <= 0) {
+    alert("Por favor, insira o Comprimento e a Largura válidos (área maior que zero) antes de aplicar o serviço.");
+    document.getElementById('quickLength').focus();
+    return;
+  }
+
+  const container = document.getElementById('quickServiceInputContainer');
+  if (!container) return;
+
+  const isHidden = container.classList.contains('hidden');
+  if (isHidden) {
+    container.classList.remove('hidden');
+    const badgeEl = document.getElementById('quickServiceAreaBadge');
+    if (badgeEl) badgeEl.innerText = area.toFixed(2).replace('.', ',') + " m²";
+
+    setTimeout(() => {
+      const input = document.getElementById('quickServiceDescInput');
+      if (input) {
+        input.focus();
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  } else {
+    const input = document.getElementById('quickServiceDescInput');
+    if (input) input.focus();
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeQuickServiceInput() {
+  const container = document.getElementById('quickServiceInputContainer');
+  if (container) container.classList.add('hidden');
+}
+
+function addQuickDescribedService() {
+  const l = parseFloat(document.getElementById('quickLength').value) || 0;
+  const w = parseFloat(document.getElementById('quickWidth').value) || 0;
+  const area = l * w;
+
+  if (area <= 0) {
+    alert("Por favor, insira o Comprimento e a Largura válidos na calculadora.");
+    document.getElementById('quickLength').focus();
+    return;
+  }
+
+  const descInput = document.getElementById('quickServiceDescInput');
+  const desc = descInput ? descInput.value.trim() : "";
+
+  if (!desc) {
+    alert("Por favor, digite a descrição do serviço para adicionar.");
+    if (descInput) descInput.focus();
+    return;
+  }
+
+  const priceInput = document.getElementById('quickServicePriceInput');
+  const price = parseFloat(priceInput ? priceInput.value : 65) || 65;
+  const discSelect = document.getElementById('quickServiceDisciplineSelect');
+  let disc = discSelect ? discSelect.value : "Civil";
+
+  // Auto-ajustar disciplina com base nas palavras-chave se o usuário manteve Civil
+  const lowerDesc = desc.toLowerCase();
+  if (disc === "Civil") {
+    if (lowerDesc.includes('piso') || lowerDesc.includes('porcelan') || lowerDesc.includes('azulejo') || lowerDesc.includes('cerâm')) {
+      disc = "Pisos";
+    } else if (lowerDesc.includes('pint') || lowerDesc.includes('massa') || lowerDesc.includes('verniz')) {
+      disc = "Pintura";
+    } else if (lowerDesc.includes('elétr') || lowerDesc.includes('fio') || lowerDesc.includes('tomada') || lowerDesc.includes('luz')) {
+      disc = "Elétrica";
+    } else if (lowerDesc.includes('hidr') || lowerDesc.includes('cano') || lowerDesc.includes('esgoto') || lowerDesc.includes('tub')) {
+      disc = "Hidráulica";
+    } else if (lowerDesc.includes('gesso') || lowerDesc.includes('drywall') || lowerDesc.includes('forro')) {
+      disc = "Gesso";
+    }
+  }
+
+  // Gera código único
+  const count = (appState.catalog || []).length + 1;
+  const prefix = disc.substring(0, 3).toUpperCase();
+  const code = `${prefix}-${String(count).padStart(2, '0')}`;
+
+  const directCost = Math.round(price * 0.65 * 100) / 100; // Custo direto estimado a 65%
+
+  const newItem = {
+    code: code,
+    discipline: disc,
+    name: desc,
+    unit: "m²",
+    directCost: directCost,
+    suggestedPrice: price,
+    quantity: parseFloat(area.toFixed(2)),
+    description: desc
+  };
+
+  if (!appState.catalog || !Array.isArray(appState.catalog)) {
+    appState.catalog = [];
+  }
+  appState.catalog.push(newItem);
+
+  // Atualizar interfaces e recálculos
+  renderCatalogItems();
+  populateQuickAreaSelect();
+  recalculateBudget();
+  saveAllData(true);
+
+  // Limpar campo de descrição para o próximo
+  if (descInput) {
+    descInput.value = "";
+    descInput.focus();
+  }
+
+  showToast(`✅ Serviço "${desc}" (${area.toFixed(2)} m²) adicionado com sucesso!`);
+
+  // Destacar o novo item no catálogo
+  setTimeout(() => {
+    const cardEl = document.getElementById(`catalog-item-${code}`);
+    if (cardEl) {
+      cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      cardEl.classList.add('ring-2', 'ring-brand-orange');
+      setTimeout(() => cardEl.classList.remove('ring-2', 'ring-brand-orange'), 2500);
+    }
+  }, 200);
 }
 
 function applyQuickAreaToSelectedService() {
@@ -1097,6 +1230,7 @@ function renderCatalogItems() {
 
   appState.catalog.forEach((item, index) => {
     const card = document.createElement('div');
+    card.id = `catalog-item-${item.code}`;
     card.className = "bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-md hover:border-slate-700 transition";
 
     const subtotalSale = (item.quantity || 0) * item.suggestedPrice;

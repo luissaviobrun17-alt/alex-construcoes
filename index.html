@@ -446,15 +446,93 @@
             </div>
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Aplicar no Serviço:</label>
+            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Ou Selecionar do Catálogo:</label>
             <select id="quickAreaTargetSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-3.5 text-white font-bold text-xs outline-none focus:border-brand-orange">
               <!-- Preenchido dinamicamente com os itens do catálogo -->
             </select>
           </div>
           <div>
-            <button type="button" onclick="applyQuickAreaToSelectedService()" class="touch-btn w-full bg-brand-orange hover:bg-orange-700 text-white font-bold text-sm shadow-md">
-              <i data-lucide="check" class="w-5 h-5 mr-1"></i>
-              <span>Aplicar Área</span>
+            <button type="button" id="btnAplicarServico" onclick="toggleQuickServiceInput()" class="touch-btn w-full bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black text-sm shadow-xl flex items-center justify-center space-x-2 border-2 border-orange-400 hover:scale-[1.02] transition-transform cursor-pointer py-3.5">
+              <i data-lucide="plus-circle" class="w-5 h-5"></i>
+              <span>APLICAR SERVIÇO</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PAINEL DESCREVER SERVIÇO E BOTÃO + PARA ADICIONAR -->
+        <div id="quickServiceInputContainer" class="hidden mt-4 pt-4 border-t border-slate-800 bg-slate-950/90 p-4 sm:p-5 rounded-2xl border-2 border-brand-orange/50 shadow-2xl space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <div class="p-2 bg-brand-orange text-white rounded-xl shadow-md">
+                <i data-lucide="pen-tool" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h4 class="text-sm sm:text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <span>DESCREVER SERVIÇO PARA A ÁREA MEDIDA:</span>
+                  <span id="quickServiceAreaBadge" class="px-2.5 py-0.5 rounded-lg bg-brand-orange text-white font-black text-sm shadow">0,00 m²</span>
+                </h4>
+                <p class="text-xs text-slate-400">Digite o nome/detalhamento do serviço e clique no botão + para adicionar à obra.</p>
+              </div>
+            </div>
+            <button type="button" onclick="closeQuickServiceInput()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition cursor-pointer" title="Fechar painel">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end pt-1">
+            <div class="sm:col-span-6">
+              <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+                Descrição do Serviço <span class="text-brand-orange">*</span>
+              </label>
+              <input type="text" id="quickServiceDescInput" 
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium text-sm outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange" 
+                placeholder="Ex: Assentamento de porcelanato retificado 60x60 na sala e cozinha"
+                onkeydown="if(event.key==='Enter'){event.preventDefault(); addQuickDescribedService();}">
+            </div>
+
+            <div class="sm:col-span-3">
+              <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+                Disciplina
+              </label>
+              <select id="quickServiceDisciplineSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-white font-bold text-xs outline-none focus:border-brand-orange">
+                <option value="Civil">Civil / Alvenaria</option>
+                <option value="Pisos">Pisos / Revestimento</option>
+                <option value="Pintura">Pintura &amp; Acabamento</option>
+                <option value="Elétrica">Instalações Elétricas</option>
+                <option value="Hidráulica">Instalações Hidráulicas</option>
+                <option value="Gesso">Gesso / Drywall</option>
+                <option value="Geral">Serviço Geral</option>
+              </select>
+            </div>
+
+            <div class="sm:col-span-3 flex items-end gap-2">
+              <div class="flex-1">
+                <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+                  Preço (R$/m²)
+                </label>
+                <input type="number" id="quickServicePriceInput" step="0.50" value="65.00" min="1"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-white font-bold text-sm outline-none focus:border-brand-orange"
+                  placeholder="65.00"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault(); addQuickDescribedService();}">
+              </div>
+
+              <!-- BOTÃO + PARA ADICIONAR -->
+              <button type="button" onclick="addQuickDescribedService()" 
+                class="touch-btn h-[46px] px-4 sm:px-5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-black text-sm rounded-xl flex items-center justify-center space-x-1.5 shadow-xl border border-emerald-400/50 cursor-pointer transition-transform active:scale-95 flex-shrink-0"
+                title="Adicionar Serviço ao Orçamento">
+                <i data-lucide="plus" class="w-5 h-5 stroke-[3]"></i>
+                <span>+ Adicionar</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-400 pt-2 border-t border-slate-800/80">
+            <span class="flex items-center gap-1.5 text-emerald-400">
+              <i data-lucide="check-circle" class="w-4 h-4"></i>
+              O serviço será adicionado instantaneamente à planilha com a metragem calculada e BDI/Margem ativos.
+            </span>
+            <button type="button" onclick="applyQuickAreaToSelectedService()" class="text-slate-400 hover:text-brand-orange underline cursor-pointer self-start sm:self-auto font-medium">
+              Ou aplicar metragem calculada no item existente selecionado acima
             </button>
           </div>
         </div>
@@ -1467,7 +1545,7 @@
     <span id="toastMessage" class="text-sm font-bold">Dados salvos com sucesso!</span>
   </div>
 
-  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (VERSÃO ATUALIZADA V8) -->
-  <script src="app.js?v=20260916v8"></script>
+  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (VERSÃO ATUALIZADA V9) -->
+  <script src="app.js?v=20260916v9"></script>
 </body>
 </html>
